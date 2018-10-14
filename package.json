@@ -1,0 +1,41 @@
+{
+    "name": "ff-three",
+    "version": "1.0.0",
+    "description": "FF Three Typescript Foundation Library",
+    "scripts": {
+        "build": "tsc -p source",
+        "test": "tsc -p test; mocha -c --ui tdd node_modules/@ff/test/three/test.js || exit 0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/framelab/ff-three.git"
+    },
+    "keywords": [
+        "typescript",
+        "react"
+    ],
+    "author": {
+        "name": "Ralph Wiedemeier",
+        "url": "https://about.me/ralphw"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/framelab/ff-three/issues"
+    },
+    "homepage": "https://github.com/framelab/ff-three#readme",
+    "dependencies": {
+        "react": "^16.5.2",
+        "react-dom": "^16.5.2",
+        "three": "^0.97.0"
+    },
+    "devDependencies": {
+        "@types/react": "^16.4.16",
+        "@types/react-dom": "^16.0.8",
+        "@types/three": "^0.93.1",
+        "@types/chai": "^4.1.6",
+        "@types/mocha": "^5.2.5",
+        "chai": "^4.2.0",
+        "mocha": "^5.2.0",
+        "typescript": "^3.1.3"
+    }
+}
