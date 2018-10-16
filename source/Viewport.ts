@@ -95,8 +95,8 @@ export default class Viewport
     protected updateViewport()
     {
         const vp = this._vp;
-        vp._x = this.left * this.canvasWidth;
-        vp._y = this.top * this.canvasHeight;
+        vp.x = this.left * this.canvasWidth;
+        vp.y = this.top * this.canvasHeight;
         vp.w = this.width * this.canvasWidth;
         vp.h = this.height * this.canvasHeight;
     }
