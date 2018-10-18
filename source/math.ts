@@ -63,25 +63,25 @@ const _math = {
         //const m22 = cosX * cosY;
 
         result = result || new THREE.Matrix4();
-        const elements = result.elements;
+        const e = result.elements;
 
-        elements[0] = m00;
-        elements[1] = m10;
-        elements[2] = m20;
-        elements[3] = 0;
-        elements[4] = m01;
-        elements[5] = m11;
-        elements[6] = m21;
-        elements[7] = 0;
-        elements[8] = m02;
-        elements[9] = m12;
-        elements[10] = m22;
-        elements[11] = 0;
+        e[0] = m00;
+        e[1] = m10;
+        e[2] = m20;
+        e[3] = 0;
+        e[4] = m01;
+        e[5] = m11;
+        e[6] = m21;
+        e[7] = 0;
+        e[8] = m02;
+        e[9] = m12;
+        e[10] = m22;
+        e[11] = 0;
 
-        elements[12] = ox * m00 + oy * m01 + oz * m02;
-        elements[13] = ox * m10 + oy * m11 + oz * m12;
-        elements[14] = ox * m20 + oy * m21 + oz * m22;
-        elements[15] = 1;
+        e[12] = ox * m00 + oy * m01 + oz * m02;
+        e[13] = ox * m10 + oy * m11 + oz * m12;
+        e[14] = ox * m20 + oy * m21 + oz * m22;
+        e[15] = 1;
 
         return result;
     },
@@ -98,6 +98,15 @@ const _math = {
         offsetOut.x = -_vec4.x;
         offsetOut.y = -_vec4.y;
         offsetOut.z = -_vec4.z;
+    },
+
+    isMatrix4Identity: function(matrix: THREE.Matrix4)
+    {
+        const e = matrix.elements;
+        return e[0]  === 1 && e[1]  === 0 && e[2]  === 0 && e[3]  === 0
+            && e[4]  === 0 && e[5]  === 1 && e[6]  === 0 && e[7]  === 0
+            && e[8]  === 0 && e[9]  === 0 && e[10] === 1 && e[11] === 0
+            && e[12] === 0 && e[13] === 0 && e[14] === 0 && e[15] === 1;
     }
 };
 
