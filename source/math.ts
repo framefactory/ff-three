@@ -6,18 +6,23 @@
  */
 
 import * as THREE from "three";
+import baseMath from "@ff/core/math";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _euler = new THREE.Euler();
-const _vec4 = new THREE.Vector4();
+const _vec4a = new THREE.Vector4();
+const _vec4b = new THREE.Vector4();
+const _vec3a = new THREE.Vector3();
+const _vec3b = new THREE.Vector3();
 const _mat4 = new THREE.Matrix4();
+const _euler = new THREE.Euler();
+const _quat = new THREE.Quaternion();
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export type Matrix4 = Float32Array | number[];
 
-const _math = {
+const math = {
     PI: 3.1415926535897932384626433832795,
     DOUBLE_PI: 6.283185307179586476925286766559,
     HALF_PI: 1.5707963267948966192313216916398,
@@ -92,12 +97,12 @@ const _math = {
         _euler.toVector3(orientationOut);
 
         _mat4.getInverse(matrix);
-        _vec4.set(0, 0, 0, 1);
-        _vec4.applyMatrix4(_mat4);
+        _vec4a.set(0, 0, 0, 1);
+        _vec4a.applyMatrix4(_mat4);
 
-        offsetOut.x = -_vec4.x;
-        offsetOut.y = -_vec4.y;
-        offsetOut.z = -_vec4.z;
+        offsetOut.x = -_vec4a.x;
+        offsetOut.y = -_vec4a.y;
+        offsetOut.z = -_vec4a.z;
     },
 
     isMatrix4Identity: function(matrix: THREE.Matrix4)
@@ -107,7 +112,19 @@ const _math = {
             && e[4]  === 0 && e[5]  === 1 && e[6]  === 0 && e[7]  === 0
             && e[8]  === 0 && e[9]  === 0 && e[10] === 1 && e[11] === 0
             && e[12] === 0 && e[13] === 0 && e[14] === 0 && e[15] === 1;
+    },
+
+    decomposeTransformMatrix: function(matrix: number[], posOut: number[], rotOut: number[], scaleOut: number[])
+    {
+        _mat4.fromArray(matrix);
+        _mat4.decompose(_vec3a, _quat, _vec3b);
+        _euler.setFromQuaternion(_quat, "XYZ");
+        _vec3a.toArray(posOut);
+        _vec3b.toArray(scaleOut);
+        _euler.toVector3(_vec3a);
+        _vec4a.multiplyScalar(baseMath.RAD2DEG);
+        _vec3a.toArray(rotOut);
     }
 };
 
-export default _math;
+export default math;
