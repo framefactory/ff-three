@@ -11,13 +11,18 @@ import System from "@ff/core/ecs/System";
 import Component from "@ff/core/ecs/Component";
 import Pulse from "@ff/core/ecs/Pulse";
 
-import RenderSystemView, { Viewport } from "./RenderSystemView";
+import RenderView, {
+    Viewport,
+    IViewportManip,
+    IViewportPointerEvent,
+    IViewportTriggerEvent
+} from "./RenderView";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IRenderContext
 {
-    view: RenderSystemView;
+    view: RenderView;
     viewport: Viewport;
     scene: THREE.Scene;
     camera: THREE.Camera;
@@ -29,9 +34,11 @@ export interface IRenderable extends Component
     postRender?: (context: IRenderContext) => void;
 }
 
-export default class RenderSystem extends System
+export default class RenderSystem extends System implements IViewportManip
 {
-    protected renderViews: RenderSystemView[] = [];
+    next: IViewportManip;
+
+    protected views: RenderView[] = [];
 
     protected preRenderList: IRenderable[] = [];
     protected postRenderList: IRenderable[] = [];
@@ -46,18 +53,20 @@ export default class RenderSystem extends System
         return null;
     }
 
-    attachView(view: RenderSystemView)
+    attachView(view: RenderView)
     {
-        this.renderViews.push(view);
+        view.next = this;
+        this.views.push(view);
     }
 
-    detachView(view: RenderSystemView)
+    detachView(view: RenderView)
     {
-        const index = this.renderViews.indexOf(view);
+        const index = this.views.indexOf(view);
         if (index < 0) {
             throw new Error("render view not found");
         }
-        this.renderViews.splice(index, 1);
+        view.next = null;
+        this.views.splice(index, 1);
     }
 
     advance(pulse: Pulse)
@@ -68,7 +77,11 @@ export default class RenderSystem extends System
         const scene = this.scene;
         const camera = this.camera;
 
-        this.renderViews.forEach(renderView => renderView.render(scene, camera));
+        if (!scene || !camera) {
+            return;
+        }
+
+        this.views.forEach(view => view.render(scene, camera));
     }
 
     preRender(context: IRenderContext)
@@ -85,6 +98,16 @@ export default class RenderSystem extends System
         for (let i = 0, n = renderables.length; i < n; ++i) {
             renderables[i].postRender(context);
         }
+    }
+
+    onPointer(event: IViewportPointerEvent)
+    {
+        return this.next ? this.next.onPointer(event) : false;
+    }
+
+    onTrigger(event: IViewportTriggerEvent)
+    {
+        return this.next ? this.next.onTrigger(event) : false;
     }
 
     protected didAddComponent(component: IRenderable)
