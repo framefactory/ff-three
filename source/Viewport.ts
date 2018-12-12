@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 import { IManipBaseEvent, IManipPointerEvent, IManipTriggerEvent } from "@ff/browser/ManipTarget";
 
-import UniversalCamera, { ECameraPreset, ECameraType } from "./UniversalCamera";
+import UniversalCamera, { EViewPreset, EProjection } from "./UniversalCamera";
 import ObjectManipulator from "./ObjectManipulator";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ export default class Viewport implements IViewportManip
         this.updateViewport();
     }
 
-    setBuiltInCamera(type: ECameraType, preset?: ECameraPreset)
+    setBuiltInCamera(type: EProjection, preset?: EViewPreset)
     {
         if (!this._camera) {
             this._camera = new UniversalCamera(type);
@@ -198,7 +198,6 @@ export default class Viewport implements IViewportManip
             if (cam.isUniversalCamera || cam.isPerspectiveCamera) {
                 cam.aspect = aspect;
                 cam.updateProjectionMatrix();
-                console.log(aspect);
             }
             else if (cam.isOrthographicCamera) {
                 const dy = (cam.top - cam.bottom) * 0.5;

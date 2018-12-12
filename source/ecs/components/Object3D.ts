@@ -7,7 +7,12 @@
 
 import * as THREE from "three";
 
-import Component, { IComponentEvent } from "@ff/core/ecs/Component";
+import {
+    Component,
+    IComponentEvent,
+    Entity
+} from "@ff/core/ecs";
+
 import Transform from "./Transform";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,17 +42,24 @@ const _renderContext = {
     group: null
 };
 
-export default abstract class Object3D extends Component
+export default class Object3D extends Component
 {
     static readonly type: string = "Object3D";
 
-    protected _transform: Transform = null;
-    private _object: THREE.Object3D = null;
+    private _transform: Transform = null;
+    private _object3D: THREE.Object3D = null;
 
-    constructor(id?: string)
+    constructor(entity: Entity, id?: string)
     {
-        super(id);
+        super(entity, id);
         this.addEvent("object");
+
+        if (!this.beforeRender) {
+            this.beforeRender = null;
+        }
+        if (!this.afterRender) {
+            this.afterRender = null;
+        }
     }
 
     get transform(): Transform
@@ -57,19 +69,19 @@ export default abstract class Object3D extends Component
 
     get object3D(): THREE.Object3D | null
     {
-        return this._object;
+        return this._object3D;
     }
 
     set object3D(object: THREE.Object3D)
     {
-        if (this._object && this._transform) {
-            this._transform.removeObject3D(this._object);
-            this._object.onBeforeRender = undefined;
-            this._object.onAfterRender = undefined;
+        if (this._object3D && this._transform) {
+            this._transform.removeObject3D(this._object3D);
+            this._object3D.onBeforeRender = undefined;
+            this._object3D.onAfterRender = undefined;
         }
 
-        this.emit<IObject3DObjectEvent>("object", { current: this._object, next: object });
-        this._object = object;
+        this.emit<IObject3DObjectEvent>("object", { current: this._object3D, next: object });
+        this._object3D = object;
 
         if (object) {
             object.matrixAutoUpdate = false;
@@ -87,28 +99,25 @@ export default abstract class Object3D extends Component
         }
     }
 
-    abstract beforeRender?(context: IObject3DRenderContext);
-    abstract afterRender?(context: IObject3DRenderContext);
-
     create()
     {
         this.trackComponent(Transform, transform => {
             this._transform = transform;
-            if (this._object) {
-                transform.addObject3D(this._object);
+            if (this._object3D) {
+                transform.addObject3D(this._object3D);
             }
         }, transform => {
             this._transform = null;
-            if (this._object) {
-                transform.removeObject3D(this._object);
+            if (this._object3D) {
+                transform.removeObject3D(this._object3D);
             }
         });
     }
 
     dispose()
     {
-        if (this._object && this._transform) {
-            this._transform.removeObject3D(this._object);
+        if (this._object3D && this._transform) {
+            this._transform.removeObject3D(this._object3D);
         }
 
         super.dispose();
@@ -116,8 +125,10 @@ export default abstract class Object3D extends Component
 
     toString()
     {
-        return super.toString() + (this._object ? ` - type: ${this._object.type}` : " - (null)");
+        return super.toString() + (this._object3D ? ` - type: ${this._object3D.type}` : " - (null)");
     }
+
+    protected beforeRender?(context: IObject3DRenderContext);
 
     private _onBeforeRender(
         renderer: THREE.WebGLRenderer,
@@ -136,6 +147,8 @@ export default abstract class Object3D extends Component
 
         this.beforeRender(_renderContext);
     }
+
+    protected afterRender?(context: IObject3DRenderContext);
 
     private _onAfterRender(
         renderer: THREE.WebGLRenderer,

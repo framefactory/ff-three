@@ -24,8 +24,8 @@ enum EManipPhase { Off, Active, Release }
 export default class ObjectManipulator implements IManip
 {
     readonly orientation = new THREE.Vector3();
-    readonly offset = new THREE.Vector2();
-    distance = 50;
+    readonly offset = new THREE.Vector3();
+    size = 50;
     zoom = 1;
 
     readonly minOrientation = new THREE.Vector3(-90, NaN, NaN);

@@ -7,9 +7,11 @@
 
 import * as THREE from "three";
 
-import System from "@ff/core/ecs/System";
-import Component from "@ff/core/ecs/Component";
-import Pulse from "@ff/core/ecs/Pulse";
+import {
+    System,
+    Registry,
+    Pulse
+} from "@ff/core/ecs";
 
 import RenderView, {
     Viewport,
@@ -17,6 +19,9 @@ import RenderView, {
     IViewportPointerEvent,
     IViewportTriggerEvent
 } from "./RenderView";
+
+import Scene from "./components/Scene";
+import Camera from "./components/Camera";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,29 +33,41 @@ export interface IRenderContext
     camera: THREE.Camera;
 }
 
-export interface IRenderable extends Component
-{
-    preRender?: (context: IRenderContext) => void;
-    postRender?: (context: IRenderContext) => void;
-}
-
-export default class RenderSystem extends System implements IViewportManip
+export default class RenderSystem extends System
 {
     next: IViewportManip;
 
-    protected views: RenderView[] = [];
+    protected pulse: Pulse;
+    protected animHandler: number;
+    protected views: RenderView[];
 
-    protected preRenderList: IRenderable[] = [];
-    protected postRenderList: IRenderable[] = [];
 
-    get scene(): THREE.Scene
+    constructor(registry?: Registry)
     {
-        return null;
+        super(registry);
+
+        this.onAnimationFrame = this.onAnimationFrame.bind(this);
+
+        this.pulse = new Pulse();
+        this.animHandler = 0;
+        this.views = [];
     }
 
-    get camera(): THREE.Camera
+    start()
     {
-        return null;
+        if (this.animHandler === 0) {
+            this.pulse.start();
+            this.animHandler = window.requestAnimationFrame(this.onAnimationFrame);
+        }
+    }
+
+    stop()
+    {
+        if (this.animHandler !== 0) {
+            this.pulse.stop();
+            window.cancelAnimationFrame(this.animHandler);
+            this.animHandler = 0;
+        }
     }
 
     attachView(view: RenderView)
@@ -69,37 +86,6 @@ export default class RenderSystem extends System implements IViewportManip
         this.views.splice(index, 1);
     }
 
-    advance(pulse: Pulse)
-    {
-        this.update(pulse);
-        this.tick(pulse);
-
-        const scene = this.scene;
-        const camera = this.camera;
-
-        if (!scene || !camera) {
-            return;
-        }
-
-        this.views.forEach(view => view.render(scene, camera));
-    }
-
-    preRender(context: IRenderContext)
-    {
-        const renderables = this.preRenderList;
-        for (let i = 0, n = renderables.length; i < n; ++i) {
-            renderables[i].preRender(context);
-        }
-    }
-
-    postRender(context: IRenderContext)
-    {
-        const renderables = this.postRenderList;
-        for (let i = 0, n = renderables.length; i < n; ++i) {
-            renderables[i].postRender(context);
-        }
-    }
-
     onPointer(event: IViewportPointerEvent)
     {
         return this.next ? this.next.onPointer(event) : false;
@@ -110,26 +96,38 @@ export default class RenderSystem extends System implements IViewportManip
         return this.next ? this.next.onTrigger(event) : false;
     }
 
-    protected didAddComponent(component: IRenderable)
+    protected renderFrame()
     {
-        if (component.preRender) {
-            this.preRenderList.push(component);
+        const pulse = this.pulse;
+        pulse.advance();
+
+        this.update(pulse);
+        this.tick(pulse);
+
+        const module = this.module;
+        const sceneComponent = module.components.get(Scene);
+        const cameraComponent = module.components.get(Camera);
+
+        if (!sceneComponent || !cameraComponent) {
+            console.warn("scene and/or camera component missing");
+            return;
         }
-        if (component.postRender) {
-            this.postRenderList.push(component);
+
+        const scene = sceneComponent.scene;
+        const camera = cameraComponent.camera;
+
+        if (!scene || !camera) {
+            this.stop();
+            throw new Error("scene and/or camera missing");
         }
+
+        // this in turn calls preRender() and postRender() for each view and viewport
+        this.views.forEach(view => view.render(scene, camera));
     }
 
-    protected willRemoveComponent(component: IRenderable)
+    protected onAnimationFrame()
     {
-        let index = this.preRenderList.indexOf(component);
-        if (index >= 0) {
-            this.preRenderList.splice(index, 1);
-        }
-
-        index = this.postRenderList.indexOf(component);
-        if (index >= 0) {
-            this.postRenderList.splice(index, 1);
-        }
+        this.renderFrame();
+        this.animHandler = window.requestAnimationFrame(this.onAnimationFrame);
     }
 }

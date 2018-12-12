@@ -10,12 +10,18 @@ import * as THREE from "three";
 import { Readonly } from "@ff/core/types";
 import math from "@ff/core/math";
 
-import types from "@ff/core/ecs/propertyTypes";
-import Hierarchy from "@ff/core/ecs/Hierarchy";
+import {
+    types,
+    Hierarchy,
+    Entity
+} from "@ff/core/ecs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const _vec3 = new THREE.Vector3();
+const _vec3b = new THREE.Vector3();
+const _quat = new THREE.Quaternion();
+const _euler = new THREE.Euler();
 
 export enum ERotationOrder { XYZ, YZX, ZXY, XZY, YXZ, ZYX }
 
@@ -29,47 +35,62 @@ export default class Transform extends Hierarchy
     static readonly type: string = "Transform";
 
     ins = this.ins.append({
-        pos: types.Vector3("Position"),
-        rot: types.Vector3("Rotation"),
-        ord: types.Enum("Order", ERotationOrder),
-        sca: types.Vector3("Scale", [ 1, 1, 1 ])
+        position: types.Vector3("Position"),
+        rotation: types.Vector3("Rotation"),
+        order: types.Enum("Order", ERotationOrder),
+        scale: types.Vector3("Scale", [ 1, 1, 1 ])
     });
 
     outs = this.ins.append({
-        mat: types.Matrix4("Matrix")
+        matrix: types.Matrix4("Matrix")
     });
 
     private _object: THREE.Object3D;
 
-    constructor(id?: string)
+    constructor(entity: Entity, id?: string)
     {
-        super(id);
+        super(entity, id);
 
         this._object = new THREE.Object3D();
         this._object.matrixAutoUpdate = false;
     }
 
+    setFromMatrix(matrix: THREE.Matrix4)
+    {
+        const { position, rotation, order, scale } = this.ins;
+
+        matrix.decompose(_vec3, _quat, _vec3b);
+        _vec3.toArray(position.value);
+
+        const orderName = types.getEnumName(ERotationOrder, order.value);
+        _euler.setFromQuaternion(_quat, orderName);
+        _euler.toVector3(_vec3);
+        _vec3.multiplyScalar(math.RAD2DEG).toArray(rotation.value);
+
+        _vec3b.toArray(scale.value);
+
+        position.set();
+        rotation.set();
+        scale.set();
+    }
+
     update()
     {
         const object = this._object;
-        const { pos, rot, ord, sca, mat } = this.ins;
-        const matOut = this.outs.mat;
+        const { position, rotation, order, scale } = this.ins;
+        const { matrix } = this.outs;
 
-        if (mat.changed) {
-            object.matrix.fromArray(mat.value);
-            object.matrixWorldNeedsUpdate = true;
-        }
-        else {
-            object.position.fromArray(pos.value);
-            _vec3.fromArray(rot.value).multiplyScalar(math.DEG2RAD);
-            const order = types.getEnumName(ERotationOrder, ord.value);
-            object.rotation.setFromVector3(_vec3, order);
-            object.scale.fromArray(sca.value);
-            object.updateMatrix();
-        }
+        object.position.fromArray(position.value);
+        _vec3.fromArray(rotation.value).multiplyScalar(math.DEG2RAD);
+        const orderName = types.getEnumName(ERotationOrder, order.value);
+        object.rotation.setFromVector3(_vec3, orderName);
+        object.scale.fromArray(scale.value);
+        object.updateMatrix();
 
-        (object.matrix as any).toArray(matOut.value);
-        matOut.push();
+        (object.matrix as any).toArray(matrix.value);
+        matrix.push();
+
+        return true;
     }
 
     dispose()

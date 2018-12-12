@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 import { EManipPointerEventType, IManip, IManipPointerEvent, IManipTriggerEvent } from "@ff/browser/ManipTarget";
 
-import { ECameraPreset, ECameraType } from "../UniversalCamera";
+import { EViewPreset, EProjection } from "../UniversalCamera";
 import RenderSystem, { IRenderContext } from "./RenderSystem";
 import Viewport, { IViewportManip, IViewportPointerEvent, IViewportTriggerEvent } from "../Viewport";
 
@@ -30,6 +30,8 @@ export default class RenderView implements IManip
     protected activeViewport: Viewport;
     protected context: IRenderContext;
 
+    private _enabled: boolean;
+
     constructor(system: RenderSystem, canvas: HTMLCanvasElement,
         overlay: HTMLElement, params?: THREE.WebGLRendererParameters)
     {
@@ -45,6 +47,8 @@ export default class RenderView implements IManip
         }, params);
 
         this.renderer = new THREE.WebGLRenderer(rendererParams);
+        this.renderer.autoClear = false;
+        this.renderer.setClearColor("#ff0000");
 
         this.viewports = [];
         this.activeViewport = null;
@@ -56,7 +60,18 @@ export default class RenderView implements IManip
             camera: null
         };
 
-        this.system.attachView(this);
+        this._enabled = false;
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(state: boolean) {
+        if (state !== this._enabled) {
+            state ? this.system.attachView(this) : this.system.detachView(this);
+            this._enabled = state;
+        }
     }
 
     get canvasWidth()
@@ -80,6 +95,8 @@ export default class RenderView implements IManip
         context.scene = scene;
         context.camera = camera;
 
+        this.renderer.clear();
+
         const viewports = this.viewports;
         for (let i = 0, n = viewports.length; i < n; ++i) {
             const viewport = viewports[i];
@@ -101,7 +118,7 @@ export default class RenderView implements IManip
         this.viewports.forEach(viewport => viewport.setCanvasSize(width, height));
     }
 
-    addViewport(type?: ECameraType, preset?: ECameraPreset): Viewport
+    addViewport(type?: EProjection, preset?: EViewPreset): Viewport
     {
         const viewport = new Viewport(this.canvasWidth, this.canvasHeight);
         viewport.setCanvasSize(this.canvasWidth, this.canvasHeight);

@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 import RenderView from "./RenderView";
 import RenderSystem from "./RenderSystem";
-import { ECameraPreset, ECameraType } from "../UniversalCamera";
+import { EViewPreset, EProjection } from "../UniversalCamera";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,9 +27,9 @@ export default class RenderQuadView extends RenderView
         super(system, canvas, overlay, params);
 
         this.addViewport();
-        this.addViewport(ECameraType.Orthographic, ECameraPreset.Top);
-        this.addViewport(ECameraType.Orthographic, ECameraPreset.Left);
-        this.addViewport(ECameraType.Orthographic, ECameraPreset.Front);
+        this.addViewport(EProjection.Orthographic, EViewPreset.Top);
+        this.addViewport(EProjection.Orthographic, EViewPreset.Left);
+        this.addViewport(EProjection.Orthographic, EViewPreset.Front);
 
         this.layout = EQuadViewLayout.Single;
     }
