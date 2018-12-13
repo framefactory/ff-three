@@ -10,18 +10,19 @@ import * as THREE from "three";
 ////////////////////////////////////////////////////////////////////////////////
 
 const _halfPi = Math.PI * 0.5;
+const _vec3 = new THREE.Vector3();
 
 const _cameraOrientation = [
     new THREE.Vector3(0, -_halfPi, 0), // left
     new THREE.Vector3(0, _halfPi, 0),  // right
-    new THREE.Vector3(_halfPi, 0, 0),  // top
-    new THREE.Vector3(-_halfPi, 0, 0), // bottom
+    new THREE.Vector3(-_halfPi, 0, 0),  // top
+    new THREE.Vector3(_halfPi, 0, 0), // bottom
     new THREE.Vector3(0, 0, 0),        // front
-    new THREE.Vector3(0, 0, Math.PI),  // back
+    new THREE.Vector3(0, Math.PI, 0),  // back
 ];
 
 export enum EProjection { Perspective, Orthographic }
-export enum EViewPreset { None = -1, Left, Right, Top, Bottom, Front, Back }
+export enum EViewPreset { None = -1, Left = 0, Right, Top, Bottom, Front, Back }
 
 export default class UniversalCamera extends THREE.Camera
 {
@@ -33,6 +34,7 @@ export default class UniversalCamera extends THREE.Camera
     fov = 50;
     size = 20;
     aspect = 1;
+    distance = 20;
     zoom = 1;
     near = 0.1;
     far = 2000;
@@ -41,6 +43,9 @@ export default class UniversalCamera extends THREE.Camera
     focus = 10;
     filmGauge = 35;
     filmOffset = 0;
+
+    // view offset
+    view = null;
 
     constructor(type?: EProjection)
     {
@@ -73,8 +78,14 @@ export default class UniversalCamera extends THREE.Camera
     {
         if (preset !== EViewPreset.None) {
             this.rotation.setFromVector3(_cameraOrientation[preset], "XYZ");
-            this.updateMatrix();
+            this.position.set(0, 0, this.distance).applyQuaternion(this.quaternion);
         }
+        else {
+            this.rotation.set(0, 0, 0);
+            this.position.set(0, 0, 0);
+        }
+
+        this.updateMatrix();
     }
 
     setFocalLength(focalLength: number)
@@ -106,24 +117,81 @@ export default class UniversalCamera extends THREE.Camera
         return this.filmGauge / Math.max(this.aspect, 1);
     }
 
-    updateProjectionMatrix()
+    setViewOffset(viewportWidth: number, viewportHeight: number,
+                  windowX: number, windowY: number, windowWidth: number, windowHeight: number)
     {
-        if (this.isOrthographicCamera) {
-            const dy = this.size / (2 * this.zoom);
-            const dx = dy * this.aspect;
-
-            this.projectionMatrix.makeOrthographic(-dx, dx, dy, -dy, this.near, this.far);
+        if (this.isPerspectiveCamera) {
+            THREE.PerspectiveCamera.prototype.setViewOffset.call(
+                this, viewportWidth, viewportHeight, windowX, windowY, windowWidth, windowHeight);
         }
         else {
-            const dy = this.near * Math.tan(THREE.Math.DEG2RAD * 0.5 * this.fov) / this.zoom;
-            const dx = dy * this.aspect;
+            THREE.OrthographicCamera.prototype.setViewOffset.call(
+                this, viewportWidth, viewportHeight, windowX, windowY, windowWidth, windowHeight);
+        }
+    }
 
-            // var skew = this.filmOffset;
-            // if (skew !== 0) {
-            //     left += near * skew / this.getFilmWidth();
-            // }
+    clearViewOffset()
+    {
+        if (this.view !== null) {
+            this.view.enabled = false;
+        }
 
-            this.projectionMatrix.makePerspective(-dx, dx, dy, -dy, this.near, this.far);
+        this.updateProjectionMatrix();
+    }
+
+    updateProjectionMatrix()
+    {
+        const near = this.near;
+        const far = this.far;
+        const aspect = this.aspect;
+        const zoom = this.zoom;
+        const view = this.view;
+
+        if (this.isOrthographicCamera) {
+            const size = this.size;
+
+            const dy = size / (2 * zoom);
+            const dx = dy * aspect;
+
+            let left = -dx;
+            let right = dx;
+            let top = dy;
+            let bottom = -dy;
+
+            if (view && view.enabled) {
+                const zoomW = zoom / (view.width / view.fullWidth);
+                const zoomH = zoom / (view.height / view.fullHeight);
+                const scaleW = size * aspect / view.width;
+                const scaleH = size / view.height;
+
+                left += scaleW * (view.offsetX / zoomW);
+                right = left + scaleW * (view.width / zoomW);
+                top -= scaleH * (view.offsetY / zoomH);
+                bottom = top - scaleH * (view.height / zoomH);
+
+            }
+
+            this.projectionMatrix.makeOrthographic(left, right, top, bottom, near, far);
+        }
+        else {
+            let top = near * Math.tan(THREE.Math.DEG2RAD * 0.5 * this.fov) / zoom;
+            let height = 2 * top;
+            let width = aspect * height;
+            let left = -0.5 * width;
+
+            if (view && view.enabled) {
+                left += view.offsetX * width / view.fullWidth;
+                top -= view.offsetY * height / view.fullHeight;
+                width *= view.width / view.fullWidth;
+                height *= view.height / view.fullHeight;
+            }
+
+            var skew = this.filmOffset;
+            if (skew !== 0) {
+                left += near * skew / this.getFilmWidth();
+            }
+
+            this.projectionMatrix.makePerspective(left, left + width, top, top - height, near, far);
         }
 
         (this as any).projectionMatrixInverse.getInverse(this.projectionMatrix);
@@ -148,6 +216,8 @@ export default class UniversalCamera extends THREE.Camera
         this.filmGauge = source.filmGauge;
         this.filmOffset = source.filmOffset;
 
+        this.view = source.view ? Object.assign({}, source.view) : null;
+
         return this;
     }
 
@@ -170,6 +240,10 @@ export default class UniversalCamera extends THREE.Camera
         data.object.focus = this.focus;
         data.object.filmGauge = this.filmGauge;
         data.object.filmOffset = this.filmOffset;
+
+        if (this.view !== null) {
+            data.object.view = Object.assign({}, this.view);
+        }
 
         return data;
     }

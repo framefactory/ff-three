@@ -17,8 +17,10 @@ export default class Camera extends Object3D
     static readonly type: string = "Camera";
 
     ins = this.ins.append({
+        offset: types.Vector3("Transform.Offset"),
+        rotation: types.Vector3("Transform.Rotation"),
         projection: types.Enum("Projection.Type", EProjection, EProjection.Perspective),
-        fov: types.Number("Projection.FovY", 50),
+        fov: types.Number("Projection.FovY", 52),
         size: types.Number("Projection.Size", 20),
         zoom: types.Number("Projection.Zoom", 1),
         near: types.Number("Frustum.ZNear", 0.01),
@@ -37,18 +39,24 @@ export default class Camera extends Object3D
 
     update()
     {
-        const ins = this.ins;
+        const { offset, rotation, projection, fov, size, zoom, near, far } = this.ins;
         const camera = this.camera;
 
-        if (ins.projection.changed) {
-            camera.setType(types.getEnumIndex(EProjection, ins.projection.value));
+        if (offset.changed || rotation.changed) {
+            camera.position.fromArray(offset.value);
+            camera.rotation.fromArray(rotation.value);
+            camera.updateMatrix();
         }
 
-        camera.fov = ins.fov.value;
-        camera.size = ins.size.value;
-        camera.zoom = ins.zoom.value;
-        camera.near = ins.near.value;
-        camera.far = ins.far.value;
+        if (projection.changed) {
+            camera.setType(types.getEnumIndex(EProjection, projection.value));
+        }
+
+        camera.fov = fov.value;
+        camera.size = size.value;
+        camera.zoom = zoom.value;
+        camera.near = near.value;
+        camera.far = far.value;
 
         camera.updateProjectionMatrix();
         return true;

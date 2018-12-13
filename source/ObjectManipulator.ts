@@ -11,8 +11,12 @@ import math from "@ff/core/math";
 import threeMath from "./math";
 
 import {
-    EManipPointerEventSource, EManipPointerEventType, EManipTriggerEventType,
-    IManip, IManipPointerEvent, IManipTriggerEvent
+    EManipPointerEventSource,
+    EManipPointerEventType,
+    EManipTriggerEventType,
+    IManip,
+    IManipPointerEvent,
+    IManipTriggerEvent
 } from "@ff/browser/ManipTarget";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,20 +24,48 @@ import {
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
 
+export interface IManipPattern
+{
+    mode: EManipMode;
+    source: EManipPointerEventSource;
+    mouseButton?: number;
+    touchCount?: number;
+    shiftKey?: boolean;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    metaKey?: boolean;
+}
+
+const _vec3 = new THREE.Vector3();
+
+const _defaultPattern: IManipPattern[] = [
+    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
+    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Dolly, mouseButton: 0, ctrlKey: true },
+    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Orbit, mouseButton: 0 },
+    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 2 },
+    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Dolly, mouseButton: 1 },
+    { source: EManipPointerEventSource.Touch, mode: EManipMode.Orbit, touchCount: 1 },
+    { source: EManipPointerEventSource.Touch, mode: EManipMode.PanDolly, touchCount: 2 },
+    { source: EManipPointerEventSource.Touch, mode: EManipMode.Pan, touchCount: 3 },
+];
+
+const _limit = (val, min, max) => !isNaN(min) && val < min ? min : (!isNaN(max) && val > max ? max : val);
+
 
 export default class ObjectManipulator implements IManip
 {
-    readonly orientation = new THREE.Vector3();
-    readonly offset = new THREE.Vector3();
+    readonly orientation = new THREE.Vector3(0, 0, 0);
+    readonly offset = new THREE.Vector3(0, 0, 50);
     size = 50;
     zoom = 1;
 
-    readonly minOrientation = new THREE.Vector3(-90, NaN, NaN);
-    readonly maxOrientation = new THREE.Vector3(90, NaN, NaN);
-    readonly minOffset = new THREE.Vector2(NaN, NaN);
-    readonly maxOffset = new THREE.Vector2(NaN, NaN);
+    readonly minOrientation = [ -90, NaN, NaN ];
+    readonly maxOrientation = [ 90, NaN, NaN ];
+    readonly minOffset = [ NaN, NaN, 0.1 ];
+    readonly maxOffset = [ NaN, NaN, 100 ];
 
     orientationEnabled = true;
+    offsetEnabled = true;
     orthographicMode = false;
 
     protected mode = EManipMode.Off;
@@ -48,105 +80,11 @@ export default class ObjectManipulator implements IManip
     protected viewportWidth = 100;
     protected viewportHeight = 100;
 
-    private _target: THREE.Object3D = null;
-    private _matrix: THREE.Matrix4 = null;
-
-    protected checkLimits()
+    constructor()
     {
-        const {
-            orientation, minOrientation, maxOrientation,
-            offset, minOffset, maxOffset
-        } = this;
-
-        for (let i = 0; i < 3; ++i) {
-            if (!isNaN(minOrientation[i]) && orientation[i] < minOrientation[i]) {
-                orientation[i] = minOrientation[i];
-            }
-            if (!isNaN(maxOrientation[i]) && orientation[i] > maxOrientation[i]) {
-                orientation[i] = maxOrientation[i];
-            }
-        }
-        for (let i = 0; i < 2; ++i) {
-            if (!isNaN(minOffset[i]) && offset[i] < minOffset[i]) {
-                offset[i] = minOffset[i];
-            }
-            if (!isNaN(maxOffset[i]) && offset[i] > maxOffset[i]) {
-                offset[i] = maxOffset[i];
-            }
-        }
     }
 
-
-    constructor(target?: THREE.Object3D)
-    {
-        this.target = target || null;
-    }
-
-    set target(target: THREE.Object3D) {
-        this._target = target;
-        if (target) {
-            target.matrixAutoUpdate = false;
-            threeMath.decomposeOrbitMatrix(target.matrix, this.orientation, this.offset);
-            this._matrix = target.matrix;
-        }
-        else {
-            this._matrix = new THREE.Matrix4();
-        }
-    }
-
-    get target() {
-        return this._target;
-    }
-
-    get matrix() {
-        return this._target ? this._target.matrix : this._matrix;
-    }
-
-    setViewportSize(width: number, height: number)
-    {
-        this.viewportWidth = width;
-        this.viewportHeight = height;
-    }
-
-    update(): boolean
-    {
-        if (this.phase === EManipPhase.Off && this.deltaWheel === 0) {
-            return false;
-        }
-
-        if (this.deltaWheel !== 0) {
-            this.updatePose(0, 0, this.deltaWheel * 0.07 + 1, 0, 0, 0);
-            this.deltaWheel = 0;
-            return true;
-        }
-
-        if (this.phase === EManipPhase.Active) {
-            if (this.deltaX === 0 && this.deltaY === 0 && this.deltaPinch === 1) {
-                return false;
-            }
-
-            this.updateByMode();
-            this.deltaX = 0;
-            this.deltaY = 0;
-            this.deltaPinch = 1;
-            return true;
-        }
-        else if (this.phase === EManipPhase.Release) {
-            this.deltaX *= 0.85;
-            this.deltaY *= 0.85;
-            this.deltaPinch = 1;
-            this.updateByMode();
-
-            const delta = Math.abs(this.deltaX) + Math.abs(this.deltaY) + Math.abs(this.deltaPinch * 100 - 1);
-            if (delta < 0.1) {
-                this.mode = EManipMode.Off;
-                this.phase = EManipPhase.Off;
-            }
-            return true;
-        }
-    }
-
-        onPointer(event: IManipPointerEvent)
+    onPointer(event: IManipPointerEvent)
     {
         if (event.isPrimary) {
             if (event.type === EManipPointerEventType.Down) {
@@ -194,19 +132,136 @@ export default class ObjectManipulator implements IManip
         return false;
     }
 
+    setViewportSize(width: number, height: number)
+    {
+        this.viewportWidth = width;
+        this.viewportHeight = height;
+    }
+
+    fromCamera(camera: THREE.Camera)
+    {
+        threeMath.decomposeOrbitMatrix(camera.matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(math.RAD2DEG);
+
+        const cam = camera as any;
+
+        if ((this.orthographicMode = cam.isOrthographicCamera)) {
+            this.size = cam.isUniversalCamera ? cam.size : cam.top - cam.bottom;
+        }
+    }
+
+    toCamera(camera: THREE.Camera): boolean
+    {
+        if (!this.update()) {
+            return false;
+        }
+
+        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        threeMath.composeOrbitMatrix(_vec3, this.offset, camera.matrix);
+        camera.matrixWorldNeedsUpdate = true;
+
+        const cam = camera as any;
+        if (cam.isOrthographicCamera) {
+            if (cam.isUniversalCamera) {
+                cam.size = this.size;
+            }
+            else {
+                const aspect = camera.userData["aspect"] || 1;
+                const halfSize = this.size * 0.5;
+                cam.left = -halfSize * aspect;
+                cam.right = halfSize * aspect;
+                cam.bottom = -halfSize;
+                cam.top = halfSize;
+            }
+            cam.updateProjectionMatrix();
+        }
+    }
+
+    fromObject(object: THREE.Object3D)
+    {
+        threeMath.decomposeOrbitMatrix(object.matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(math.RAD2DEG);
+        this.orthographicMode = false;
+    }
+
+    toObject(object: THREE.Object3D): boolean
+    {
+        if (!this.update()) {
+            return false;
+        }
+
+        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        threeMath.composeOrbitMatrix(_vec3, this.offset, object.matrix);
+    }
+
+    fromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
+    {
+        threeMath.decomposeOrbitMatrix(matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(math.RAD2DEG);
+        this.orthographicMode = false;
+    }
+
+    toMatrix(matrix: THREE.Matrix4, invert: boolean = false): boolean
+    {
+        if (!this.update()) {
+            return false;
+        }
+
+        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        threeMath.composeOrbitMatrix(_vec3, this.offset, matrix);
+    }
+
+    update(): boolean
+    {
+        if (this.phase === EManipPhase.Off && this.deltaWheel === 0) {
+            return false;
+        }
+
+        if (this.deltaWheel !== 0) {
+            this.updatePose(0, 0, this.deltaWheel * 0.07 + 1, 0, 0, 0);
+            this.deltaWheel = 0;
+            return true;
+        }
+
+        if (this.phase === EManipPhase.Active) {
+            if (this.deltaX === 0 && this.deltaY === 0 && this.deltaPinch === 1) {
+                return false;
+            }
+
+            this.updateByMode();
+            this.deltaX = 0;
+            this.deltaY = 0;
+            this.deltaPinch = 1;
+            return true;
+        }
+        else if (this.phase === EManipPhase.Release) {
+            this.deltaX *= 0.85;
+            this.deltaY *= 0.85;
+            this.deltaPinch = 1;
+            this.updateByMode();
+
+            const delta = Math.abs(this.deltaX) + Math.abs(this.deltaY);
+            if (delta < 0.1) {
+                this.mode = EManipMode.Off;
+                this.phase = EManipPhase.Off;
+            }
+            return true;
+        }
+    }
+
     protected updateByMode()
     {
         switch(this.mode) {
             case EManipMode.Orbit:
-                this.updatePose(0, 0, 0, this.deltaY, this.deltaX, 0);
+                this.updatePose(0, 0, 1, this.deltaY, this.deltaX, 0);
                 break;
 
             case EManipMode.Pan:
-                this.updatePose(this.deltaX, this.deltaY, 0, 0, 0, 0);
+                this.updatePose(this.deltaX, this.deltaY, 1, 0, 0, 0);
                 break;
 
             case EManipMode.Roll:
-                this.updatePose(0, 0, 0, 0, 0, this.deltaX);
+                this.updatePose(0, 0, 1, 0, 0, this.deltaX);
                 break;
 
             case EManipMode.Dolly:
@@ -222,8 +277,10 @@ export default class ObjectManipulator implements IManip
 
     protected updatePose(dX, dY, dScale, dPitch, dHead, dRoll)
     {
-        const orientation = this.orientation;
-        const offset = this.offset;
+        const {
+            orientation, minOrientation, maxOrientation,
+            offset, minOffset, maxOffset
+        } = this;
 
         if (this.orientationEnabled) {
             orientation.x += dPitch * 300 / this.viewportHeight;
@@ -234,21 +291,27 @@ export default class ObjectManipulator implements IManip
         let factor;
 
         if (this.orthographicMode) {
-            factor = this.size = Math.max(this.size, 0.1) * dScale;
-        }
-        else {
-            factor = this.offset.z = Math.max(this.offset.z, 0.1) * dScale;
+            factor = this.size = this.size * dScale;
+        } else {
+            factor = offset.z = offset.z * dScale;
         }
 
-        offset.x -= dX * factor / this.viewportHeight;
-        offset.y += dY * factor / this.viewportHeight;
+        offset.x -= dX * factor * 2 / this.viewportHeight;
+        offset.y += dY * factor * 2 / this.viewportHeight;
 
-        if (this._target) {
-            threeMath.composeOrbitMatrix(orientation, offset, this._target.matrix);
-            this._target.matrixWorldNeedsUpdate = true;
+        // check limits
+        orientation.x = _limit(orientation.x, minOrientation[0], maxOrientation[0]);
+        orientation.y = _limit(orientation.y, minOrientation[1], maxOrientation[1]);
+        orientation.z = _limit(orientation.z, minOrientation[2], maxOrientation[2]);
+
+        offset.x = _limit(offset.x, minOffset[0], maxOffset[0]);
+        offset.y = _limit(offset.y, minOffset[1], maxOffset[1]);
+
+        if (this.orthographicMode) {
+            this.size = _limit(this.size, minOffset[2], maxOffset[2]);
         }
         else {
-            threeMath.composeOrbitMatrix(orientation, offset, this._matrix);
+            offset.z = _limit(offset.z, minOffset[2], maxOffset[2]);
         }
     }
 

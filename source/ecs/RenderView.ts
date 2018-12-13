@@ -7,51 +7,65 @@
 
 import * as THREE from "three";
 
-import { EManipPointerEventType, IManip, IManipPointerEvent, IManipTriggerEvent } from "@ff/browser/ManipTarget";
+import { Component } from "@ff/core/ecs";
 
-import { EViewPreset, EProjection } from "../UniversalCamera";
+import {
+    EManipPointerEventType,
+    IManip,
+    IManipBaseEvent,
+    IManipPointerEvent,
+    IManipTriggerEvent
+} from "@ff/browser/ManipTarget";
+
 import RenderSystem, { IRenderContext } from "./RenderSystem";
-import Viewport, { IViewportManip, IViewportPointerEvent, IViewportTriggerEvent } from "../Viewport";
+import Viewport, { IViewportBaseEvent } from "../Viewport";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { Viewport, IViewportManip, IViewportPointerEvent, IViewportTriggerEvent };
+export { Viewport };
+
+export interface IPickInfo
+{
+    component: Component;
+    object3D: THREE.Object3D;
+    position: THREE.Vector3;
+    normal: THREE.Vector3;
+}
+
+export interface IViewBaseEvent extends IViewportBaseEvent
+{
+    view: RenderView;
+    pick: IPickInfo;
+}
+
+export interface IViewPointerEvent extends IManipPointerEvent, IViewBaseEvent { }
+export interface IViewTriggerEvent extends IManipTriggerEvent, IViewBaseEvent { }
 
 export default class RenderView implements IManip
 {
-    next: IViewportManip;
-
     readonly system: RenderSystem;
+    readonly renderer: THREE.WebGLRenderer;
     readonly canvas: HTMLCanvasElement;
     readonly overlay: HTMLElement;
-    readonly renderer: THREE.WebGLRenderer;
+    readonly viewports: Viewport[] = [];
 
-    protected viewports: Viewport[];
-    protected activeViewport: Viewport;
+    protected activeViewport: Viewport = null;
+    protected shouldResize = false;
     protected context: IRenderContext;
 
-    private _enabled: boolean;
-
-    constructor(system: RenderSystem, canvas: HTMLCanvasElement,
-        overlay: HTMLElement, params?: THREE.WebGLRendererParameters)
+    constructor(system: RenderSystem, canvas: HTMLCanvasElement, overlay: HTMLElement)
     {
-        this.next = null;
         this.system = system;
         this.canvas = canvas;
         this.overlay = overlay;
 
-        const rendererParams = Object.assign({}, {
+        this.renderer = new THREE.WebGLRenderer({
             canvas,
-            antialias: true,
-            devicePixelRatio: window.devicePixelRatio
-        }, params);
+            antialias: true
+        });
 
-        this.renderer = new THREE.WebGLRenderer(rendererParams);
         this.renderer.autoClear = false;
-        this.renderer.setClearColor("#ff0000");
-
-        this.viewports = [];
-        this.activeViewport = null;
+        this.renderer.setClearColor("#0090c0");
 
         this.context = {
             view: this,
@@ -59,19 +73,6 @@ export default class RenderView implements IManip
             scene: null,
             camera: null
         };
-
-        this._enabled = false;
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(state: boolean) {
-        if (state !== this._enabled) {
-            state ? this.system.attachView(this) : this.system.detachView(this);
-            this._enabled = state;
-        }
     }
 
     get canvasWidth()
@@ -84,13 +85,38 @@ export default class RenderView implements IManip
         return this.canvas.height;
     }
 
-    dispose()
+    attach()
+    {
+        const width = this.canvasWidth;
+        const height = this.canvasHeight;
+
+        this.viewports.forEach(viewport => viewport.setCanvasSize(width, height));
+        this.renderer.setSize(width, height, false);
+
+        this.system.attachView(this);
+    }
+
+    detach()
     {
         this.system.detachView(this);
     }
 
     render(scene: THREE.Scene, camera: THREE.Camera)
     {
+        if (this.shouldResize) {
+            this.shouldResize = false;
+
+            const width = this.canvas.width = this.canvas.clientWidth;
+            const height = this.canvas.height = this.canvas.clientHeight;
+
+            this.viewports.forEach(viewport => viewport.setCanvasSize(width, height));
+
+            if (this.renderer) {
+                this.renderer.setSize(width, height, false);
+            }
+
+        }
+
         const context = this.context;
         context.scene = scene;
         context.camera = camera;
@@ -109,26 +135,23 @@ export default class RenderView implements IManip
         }
     }
 
-    resize(width: number, height: number)
+    resize()
     {
-        this.canvas.width = width;
-        this.canvas.height = height;
-
-        this.renderer.setSize(width, height, false);
-        this.viewports.forEach(viewport => viewport.setCanvasSize(width, height));
+        this.shouldResize = true;
     }
 
-    addViewport(type?: EProjection, preset?: EViewPreset): Viewport
+    addViewport(): Viewport
     {
-        const viewport = new Viewport(this.canvasWidth, this.canvasHeight);
-        viewport.setCanvasSize(this.canvasWidth, this.canvasHeight);
-
-        if (type !== undefined) {
-            viewport.setBuiltInCamera(type, preset);
-        }
-
+        const viewport = new Viewport();
         this.viewports.push(viewport);
         return viewport;
+    }
+
+    addViewports(count: number)
+    {
+        for (let i = 0; i < count; ++i) {
+            this.viewports.push(new Viewport());
+        }
     }
 
     removeViewport(viewport: Viewport)
@@ -153,58 +176,70 @@ export default class RenderView implements IManip
 
     onPointer(event: IManipPointerEvent)
     {
-        const next = this.next;
-        if (!next) {
+        const system = this.system;
+        if (!system) {
             return false;
         }
 
-        let vpEvent = null;
-
-        if (event.isPrimary) {
-            if (event.type === EManipPointerEventType.Down) {
-                const viewports = this.viewports;
-                for (let i = 0, n = viewports.length; i < n; ++i) {
-                    const viewport = viewports[i];
-                    if ((vpEvent = viewport.hitTestEvent(event))) {
-                        this.activeViewport = viewport;
-                        break;
-                    }
-                }
-            }
-            else if (event.type === EManipPointerEventType.Up) {
-                vpEvent = this.activeViewport.convertEvent(event);
-                this.activeViewport = null;
-            }
-        }
-        if (this.activeViewport) {
-            vpEvent = this.activeViewport.convertEvent(event);
+        if (event.type === EManipPointerEventType.Hover ||
+            (event.isPrimary && event.type === EManipPointerEventType.Down)) {
+            this.activeViewport = null;
         }
 
-        return vpEvent ? next.onPointer(vpEvent) : false;
+        const viewEvent = this.routeEvent(event);
+
+        if (viewEvent) {
+            return system.onPointer(viewEvent) || this.activeViewport.onPointer(viewEvent);
+        }
+
+        return false;
     }
 
     onTrigger(event: IManipTriggerEvent)
     {
-        const next = this.next;
-        if (!next) {
+        const system = this.system;
+        if (!system) {
             return false;
         }
 
-        let vpEvent = null;
+        const viewEvent = this.routeEvent(event);
 
-        if (this.activeViewport) {
-            vpEvent = this.activeViewport.convertEvent(event);
+        if (viewEvent) {
+            return system.onTrigger(viewEvent) || this.activeViewport.onTrigger(viewEvent);
         }
-        else {
+
+        return false;
+    }
+
+    protected routeEvent(event: IManipPointerEvent): IViewPointerEvent;
+    protected routeEvent(event: IManipTriggerEvent): IViewTriggerEvent;
+    protected routeEvent(event: IManipBaseEvent): IViewBaseEvent
+    {
+        // if no active viewport, perform a hit test against all viewports
+        if (!this.activeViewport) {
             const viewports = this.viewports;
             for (let i = 0, n = viewports.length; i < n; ++i) {
-                const viewport = viewports[i];
-                if ((vpEvent = viewport.hitTestEvent(event))) {
+                const vp = viewports[i];
+                if (vp.enabled && vp.isPointInside(event.localX, event.localY)) {
+                    this.activeViewport = vp;
                     break;
                 }
             }
         }
 
-        return vpEvent ? next.onTrigger(vpEvent) : false;
+        const viewport = this.activeViewport;
+
+        // if we have an active viewport now, augment event with viewport/view information
+        if (viewport) {
+            const viewEvent = event as IViewBaseEvent;
+            viewEvent.view = this;
+            viewEvent.viewport = viewport;
+            viewEvent.deviceX = viewport.getDeviceX(event.localX);
+            viewEvent.deviceY = viewport.getDeviceY(event.localY);
+            return viewEvent;
+        }
+
+        // without an active viewport, return null to cancel the event
+        return null;
     }
 }

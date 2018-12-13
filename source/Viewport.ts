@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 import { IManipBaseEvent, IManipPointerEvent, IManipTriggerEvent } from "@ff/browser/ManipTarget";
 
-import UniversalCamera, { EViewPreset, EProjection } from "./UniversalCamera";
+import UniversalCamera, { EProjection, EViewPreset } from "./UniversalCamera";
 import ObjectManipulator from "./ObjectManipulator";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,13 +21,8 @@ export interface IViewportBaseEvent extends IManipBaseEvent
     deviceY: number;
 }
 
-export interface IViewportPointerEvent extends IManipPointerEvent, IViewportBaseEvent
-{
-}
-
-export interface IViewportTriggerEvent extends IManipTriggerEvent, IViewportBaseEvent
-{
-}
+export interface IViewportPointerEvent extends IManipPointerEvent, IViewportBaseEvent { }
+export interface IViewportTriggerEvent extends IManipTriggerEvent, IViewportBaseEvent { }
 
 export interface IViewportManip
 {
@@ -50,38 +45,38 @@ export default class Viewport implements IViewportManip
 
     private _relRect: IViewportRect;
     private _absRect: IViewportRect;
-    private _vpAspect: number;
 
     private _canvasWidth: number;
     private _canvasHeight: number;
 
-    private _camera: UniversalCamera;
+    private _sceneCamera: THREE.Camera;
+    private _vpCamera: UniversalCamera;
     private _manip: ObjectManipulator;
+    private _initManip = false;
 
-    constructor(canvasWidth: number, canvasHeight: number)
+    constructor(left?: number, top?: number, width?: number, height?: number)
     {
         this.next = null;
 
         this._relRect = {
+            left: left || 0,
+            top: top || 0,
+            width: width || 1,
+            height: height || 1
+        };
+
+        this._absRect = {
             left: 0,
             top: 0,
             width: 1,
             height: 1
         };
 
-        this._absRect = {
-            left: 0,
-            top: 0,
-            width: canvasWidth,
-            height: canvasHeight
-        };
+        this._canvasWidth = 1;
+        this._canvasHeight = 1;
 
-        this._vpAspect = 0;
-
-        this._canvasWidth = canvasWidth;
-        this._canvasHeight = canvasHeight;
-
-        this._camera = null;
+        this._sceneCamera = null;
+        this._vpCamera = null;
         this._manip = null;
     }
 
@@ -110,7 +105,19 @@ export default class Viewport implements IViewportManip
     }
 
     get camera() {
-        return this._camera;
+        return this._vpCamera || this._sceneCamera;
+    }
+
+    get sceneCamera() {
+        return this._sceneCamera;
+    }
+
+    get viewportCamera() {
+        return this._vpCamera;
+    }
+
+    get manip() {
+        return this._manip;
     }
 
     setSize(left?: number, top?: number, width?: number, height?: number)
@@ -130,25 +137,46 @@ export default class Viewport implements IViewportManip
         this._canvasHeight = height;
 
         this.updateViewport();
+
+        if (this._manip) {
+            this._manip.setViewportSize(width, height);
+        }
     }
 
     setBuiltInCamera(type: EProjection, preset?: EViewPreset)
     {
-        if (!this._camera) {
-            this._camera = new UniversalCamera(type);
-            this._camera.matrixAutoUpdate = false;
-            this._camera.setPreset(preset);
+        if (!this._vpCamera) {
+            this._vpCamera = new UniversalCamera(type);
+            this._vpCamera.matrixAutoUpdate = false;
+        }
+        else {
+            this._vpCamera.setType(type);
+        }
+
+        if (preset !== undefined) {
+            this._vpCamera.setPreset(preset);
         }
     }
 
-    enableCameraControl(state: boolean)
+    unsetBuiltInCamera()
+    {
+        this._vpCamera = null;
+    }
+
+    enableCameraManip(state: boolean): ObjectManipulator
     {
         if (!state && this._manip) {
             this._manip = null;
         }
-        else if (state && !this._manip && this._camera) {
-            this._manip = new ObjectManipulator(this._camera);
+        else if (state) {
+            if (!this._manip) {
+                this._manip = new ObjectManipulator();
+                this._manip.setViewportSize(this.width, this.height);
+            }
+            this._initManip = true;
         }
+
+        return this._manip;
     }
 
     isPointInside(x: number, y: number): boolean
@@ -180,41 +208,54 @@ export default class Viewport implements IViewportManip
         return 1 - ((y - absRect.top) / absRect.height) * 2;
     }
 
-    render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera)
+    render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera?: THREE.Camera)
     {
         if (!this.enabled) {
             return;
         }
 
-        const cam: any = this._camera || camera;
+        this._sceneCamera = camera;
+        const currentCamera: any = this._vpCamera || camera;
+        if (!currentCamera) {
+            return;
+        }
+
+        if (this._manip) {
+            if (this._initManip) {
+                this._initManip = false;
+                this._manip.fromCamera(currentCamera);
+            }
+
+            this._manip.toCamera(currentCamera);
+        }
 
         const absRect = this._absRect;
         renderer.setViewport(absRect.left, absRect.top, absRect.width, absRect.height);
 
-        const aspect = this._absRect.width / this._absRect.height;
+        const aspect = absRect.width / absRect.height;
 
-        if (aspect !== this._vpAspect) {
-            this._vpAspect = aspect;
-            if (cam.isUniversalCamera || cam.isPerspectiveCamera) {
-                cam.aspect = aspect;
-                cam.updateProjectionMatrix();
+        if (aspect !== currentCamera.userData["aspect"]) {
+            currentCamera.userData["aspect"] = aspect;
+            if (currentCamera.isUniversalCamera || currentCamera.isPerspectiveCamera) {
+                currentCamera.aspect = aspect;
+                currentCamera.updateProjectionMatrix();
             }
-            else if (cam.isOrthographicCamera) {
-                const dy = (cam.top - cam.bottom) * 0.5;
-                cam.left = -dy * aspect;
-                cam.right = dy * aspect;
-                cam.updateProjectionMatrix();
+            else if (currentCamera.isOrthographicCamera) {
+                const dy = (currentCamera.top - currentCamera.bottom) * 0.5;
+                currentCamera.left = -dy * aspect;
+                currentCamera.right = dy * aspect;
+                currentCamera.updateProjectionMatrix();
             }
         }
 
         renderer["viewport"] = this;
-        renderer.render(scene, camera);
+        renderer.render(scene, currentCamera);
     }
 
-    convertEvent(event: IManipPointerEvent): IViewportPointerEvent;
-    convertEvent(event: IManipTriggerEvent): IViewportTriggerEvent;
+    extendEvent(event: IManipPointerEvent): IViewportPointerEvent;
+    extendEvent(event: IManipTriggerEvent): IViewportTriggerEvent;
 
-    convertEvent(event: IManipBaseEvent): IViewportBaseEvent
+    extendEvent(event: IManipBaseEvent): IViewportBaseEvent
     {
         const vpEvent = event as IViewportBaseEvent;
         vpEvent.viewport = this;
@@ -240,20 +281,20 @@ export default class Viewport implements IViewportManip
 
     onPointer(event: IViewportPointerEvent)
     {
-        if (this.enabled && this._manip && this._manip.onPointer(event)) {
-            return true;
+        if (this.enabled && this._manip) {
+            return this._manip.onPointer(event);
         }
 
-        return this.next && this.next.onPointer(event);
+        return false;
     }
 
     onTrigger(event: IViewportTriggerEvent)
     {
-        if (this.enabled && this._manip && this._manip.onTrigger(event)) {
-            return true;
+        if (this.enabled && this._manip) {
+            return this._manip.onTrigger(event);
         }
 
-        return this.next && this.next.onTrigger(event);
+        return false;
     }
 
     protected updateViewport()
@@ -263,9 +304,9 @@ export default class Viewport implements IViewportManip
         const canvasWidth = this._canvasWidth;
         const canvasHeight = this._canvasHeight;
 
-        absRect.left = relRect.left * canvasWidth;
-        absRect.top = relRect.top * canvasHeight;
-        absRect.width = relRect.width * canvasWidth;
-        absRect.height = relRect.height * canvasHeight;
+        absRect.left = Math.round(relRect.left * canvasWidth);
+        absRect.top = Math.round(relRect.top * canvasHeight);
+        absRect.width = Math.round(relRect.width * canvasWidth);
+        absRect.height = Math.round(relRect.height * canvasHeight);
     }
 }

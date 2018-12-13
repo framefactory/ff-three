@@ -5,10 +5,8 @@
  * License: MIT
  */
 
-import * as THREE from "three";
-
-import RenderView from "./RenderView";
 import RenderSystem from "./RenderSystem";
+import RenderView from "./RenderView";
 import { EViewPreset, EProjection } from "../UniversalCamera";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,15 +19,20 @@ export default class RenderQuadView extends RenderView
     protected _verticalSplit = 0.5;
     protected _layout: EQuadViewLayout = EQuadViewLayout.Quad;
 
-    constructor(system: RenderSystem, canvas: HTMLCanvasElement,
-        overlay: HTMLElement, params?: THREE.WebGLRendererParameters)
+    constructor(system: RenderSystem, canvas: HTMLCanvasElement, overlay: HTMLElement)
     {
-        super(system, canvas, overlay, params);
+        super(system, canvas, overlay);
 
-        this.addViewport();
-        this.addViewport(EProjection.Orthographic, EViewPreset.Top);
-        this.addViewport(EProjection.Orthographic, EViewPreset.Left);
-        this.addViewport(EProjection.Orthographic, EViewPreset.Front);
+        this.addViewports(4);
+
+        this.viewports[1].setBuiltInCamera(EProjection.Orthographic, EViewPreset.Top);
+        this.viewports[1].enableCameraManip(true).orientationEnabled = false;
+
+        this.viewports[2].setBuiltInCamera(EProjection.Orthographic, EViewPreset.Left);
+        this.viewports[2].enableCameraManip(true).orientationEnabled = false;
+
+        this.viewports[3].setBuiltInCamera(EProjection.Orthographic, EViewPreset.Front);
+        this.viewports[3].enableCameraManip(true).orientationEnabled = false;
 
         this.layout = EQuadViewLayout.Single;
     }

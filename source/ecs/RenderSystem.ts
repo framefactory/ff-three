@@ -8,6 +8,7 @@
 import * as THREE from "three";
 
 import {
+    Component,
     System,
     Registry,
     Pulse
@@ -19,6 +20,12 @@ import RenderView, {
     IViewportPointerEvent,
     IViewportTriggerEvent
 } from "./RenderView";
+
+import {
+    EManipPointerEventType,
+    EManipTriggerEventType
+} from "@ff/browser/ManipTarget";
+
 
 import Scene from "./components/Scene";
 import Camera from "./components/Camera";
@@ -33,13 +40,18 @@ export interface IRenderContext
     camera: THREE.Camera;
 }
 
+export interface IManipTarget extends Component
+{
+    onPointer?: (event: IViewportPointerEvent) => boolean;
+    onTrigger?: (event: IViewportTriggerEvent) => boolean;
+}
+
 export default class RenderSystem extends System
 {
-    next: IViewportManip;
-
     protected pulse: Pulse;
     protected animHandler: number;
     protected views: RenderView[];
+    protected manipTargets: Set<IManipTarget>;
 
 
     constructor(registry?: Registry)
@@ -51,6 +63,7 @@ export default class RenderSystem extends System
         this.pulse = new Pulse();
         this.animHandler = 0;
         this.views = [];
+        this.manipTargets = new Set();
     }
 
     start()
@@ -72,8 +85,8 @@ export default class RenderSystem extends System
 
     attachView(view: RenderView)
     {
-        view.next = this;
         this.views.push(view);
+        console.log("RenderSystem.attachView - total views: %s", this.views.length);
     }
 
     detachView(view: RenderView)
@@ -82,18 +95,39 @@ export default class RenderSystem extends System
         if (index < 0) {
             throw new Error("render view not found");
         }
-        view.next = null;
         this.views.splice(index, 1);
+        console.log("RenderSystem.detachView - total views: %s", this.views.length);
     }
 
     onPointer(event: IViewportPointerEvent)
     {
-        return this.next ? this.next.onPointer(event) : false;
+        // console.log("RenderSystem.onPointer - %s%s (%s, %s)",
+        //     event.isPrimary ? "primary " : "",
+        //     EManipPointerEventType[event.type],
+        //     event.deviceX, event.deviceY);
+
+        let handled = false;
+        this.manipTargets.forEach(target => {
+            if (target.onPointer && target.onPointer(event)) {
+                handled = true;
+            }
+        });
+
+        return handled;
     }
 
     onTrigger(event: IViewportTriggerEvent)
     {
-        return this.next ? this.next.onTrigger(event) : false;
+        // console.log("RenderSystem.onTrigger - %s", EManipTriggerEventType[event.type]);
+
+        let handled = false;
+        this.manipTargets.forEach(target => {
+            if (target.onTrigger && target.onTrigger(event)) {
+                handled = true;
+            }
+        });
+
+        return handled;
     }
 
     protected renderFrame()
@@ -129,5 +163,25 @@ export default class RenderSystem extends System
     {
         this.renderFrame();
         this.animHandler = window.requestAnimationFrame(this.onAnimationFrame);
+    }
+
+    protected didAddComponent(component: Component): void
+    {
+        super.didAddComponent(component);
+
+        const manipTarget = component as IManipTarget;
+        if (manipTarget.onPointer || manipTarget.onTrigger) {
+            this.manipTargets.add(manipTarget);
+        }
+    }
+
+    protected willRemoveComponent(component: Component): void
+    {
+        super.willRemoveComponent(component);
+
+        const manipTarget = component as IManipTarget;
+        if (manipTarget.onPointer || manipTarget.onTrigger) {
+            this.manipTargets.delete(manipTarget);
+        }
     }
 }
