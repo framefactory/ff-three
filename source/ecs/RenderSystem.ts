@@ -16,16 +16,9 @@ import {
 
 import RenderView, {
     Viewport,
-    IViewportManip,
-    IViewportPointerEvent,
-    IViewportTriggerEvent
+    IViewPointerEvent,
+    IViewTriggerEvent
 } from "./RenderView";
-
-import {
-    EManipPointerEventType,
-    EManipTriggerEventType
-} from "@ff/browser/ManipTarget";
-
 
 import Scene from "./components/Scene";
 import Camera from "./components/Camera";
@@ -42,8 +35,8 @@ export interface IRenderContext
 
 export interface IManipTarget extends Component
 {
-    onPointer?: (event: IViewportPointerEvent) => boolean;
-    onTrigger?: (event: IViewportTriggerEvent) => boolean;
+    onPointer?: (event: IViewPointerEvent) => boolean;
+    onTrigger?: (event: IViewTriggerEvent) => boolean;
 }
 
 export default class RenderSystem extends System
@@ -99,7 +92,7 @@ export default class RenderSystem extends System
         console.log("RenderSystem.detachView - total views: %s", this.views.length);
     }
 
-    onPointer(event: IViewportPointerEvent)
+    onPointer(event: IViewPointerEvent)
     {
         // console.log("RenderSystem.onPointer - %s%s (%s, %s)",
         //     event.isPrimary ? "primary " : "",
@@ -116,7 +109,7 @@ export default class RenderSystem extends System
         return handled;
     }
 
-    onTrigger(event: IViewportTriggerEvent)
+    onTrigger(event: IViewTriggerEvent)
     {
         // console.log("RenderSystem.onTrigger - %s", EManipTriggerEventType[event.type]);
 
@@ -165,9 +158,9 @@ export default class RenderSystem extends System
         this.animHandler = window.requestAnimationFrame(this.onAnimationFrame);
     }
 
-    protected didAddComponent(component: Component): void
+    protected componentAdded(component: Component): void
     {
-        super.didAddComponent(component);
+        super.componentAdded(component);
 
         const manipTarget = component as IManipTarget;
         if (manipTarget.onPointer || manipTarget.onTrigger) {
@@ -175,9 +168,9 @@ export default class RenderSystem extends System
         }
     }
 
-    protected willRemoveComponent(component: Component): void
+    protected componentRemoved(component: Component): void
     {
-        super.willRemoveComponent(component);
+        super.componentRemoved(component);
 
         const manipTarget = component as IManipTarget;
         if (manipTarget.onPointer || manipTarget.onTrigger) {

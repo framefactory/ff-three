@@ -41,7 +41,7 @@ export default class Transform extends Hierarchy
         scale: types.Vector3("Scale", [ 1, 1, 1 ])
     });
 
-    outs = this.ins.append({
+    outs = this.outs.append({
         matrix: types.Matrix4("Matrix")
     });
 
