@@ -7,8 +7,11 @@
 
 import * as THREE from "three";
 
+import { Dictionary } from "@ff/core/types";
+
 import {
     Component,
+    IComponentTypeEvent,
     System,
     Registry,
     Pulse
@@ -24,6 +27,8 @@ import Scene from "./components/Scene";
 import Camera from "./components/Camera";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+let _nextObjectIndex = 1;
 
 export interface IRenderContext
 {
@@ -44,7 +49,12 @@ export default class RenderSystem extends System
     protected pulse: Pulse;
     protected animHandler: number;
     protected views: RenderView[];
+    protected objects: Dictionary<THREE.Object3D>;
+
     protected manipTargets: Set<IManipTarget>;
+
+    protected _activeSceneComponent: Scene;
+    protected _activeCameraComponent: Camera;
 
 
     constructor(registry?: Registry)
@@ -56,7 +66,31 @@ export default class RenderSystem extends System
         this.pulse = new Pulse();
         this.animHandler = 0;
         this.views = [];
+        this.objects = {};
+
         this.manipTargets = new Set();
+
+        this._activeSceneComponent = null;
+        this._activeCameraComponent = null;
+
+        this.addComponentTypeListener(Scene, this.onSceneComponent, this);
+        this.addComponentTypeListener(Camera, this.onCameraComponent, this);
+    }
+
+    get activeSceneComponent() {
+        return this._activeSceneComponent;
+    }
+
+    get activeCameraComponent() {
+        return this._activeCameraComponent;
+    }
+
+    get activeScene(): THREE.Scene {
+        return this._activeSceneComponent ? this._activeSceneComponent.scene : null;
+    }
+
+    get activeCamera(): THREE.Camera {
+        return this._activeCameraComponent ? this._activeCameraComponent.camera : null;
     }
 
     start()
@@ -79,7 +113,7 @@ export default class RenderSystem extends System
     attachView(view: RenderView)
     {
         this.views.push(view);
-        console.log("RenderSystem.attachView - total views: %s", this.views.length);
+        //console.log("RenderSystem.attachView - total views: %s", this.views.length);
     }
 
     detachView(view: RenderView)
@@ -89,16 +123,29 @@ export default class RenderSystem extends System
             throw new Error("render view not found");
         }
         this.views.splice(index, 1);
-        console.log("RenderSystem.detachView - total views: %s", this.views.length);
+        //console.log("RenderSystem.detachView - total views: %s", this.views.length);
+    }
+
+    addObject3D(object: THREE.Object3D)
+    {
+        const index = _nextObjectIndex++;
+        object.userData["index"] = index;
+        this.objects[index] = object;
+    }
+
+    removeObject3D(object: THREE.Object3D)
+    {
+        const index = object.userData["index"];
+        delete this.objects[index];
+    }
+
+    getObjectByIndex(index: number): THREE.Object3D
+    {
+        return this.objects[index];
     }
 
     onPointer(event: IViewPointerEvent)
     {
-        // console.log("RenderSystem.onPointer - %s%s (%s, %s)",
-        //     event.isPrimary ? "primary " : "",
-        //     EManipPointerEventType[event.type],
-        //     event.deviceX, event.deviceY);
-
         let handled = false;
         this.manipTargets.forEach(target => {
             if (target.onPointer && target.onPointer(event)) {
@@ -111,7 +158,7 @@ export default class RenderSystem extends System
 
     onTrigger(event: IViewTriggerEvent)
     {
-        // console.log("RenderSystem.onTrigger - %s", EManipTriggerEventType[event.type]);
+        //console.log("RenderSystem.onTrigger - %s", EManipTriggerEventType[event.type]);
 
         let handled = false;
         this.manipTargets.forEach(target => {
@@ -131,31 +178,34 @@ export default class RenderSystem extends System
         this.update(pulse);
         this.tick(pulse);
 
-        const module = this.module;
-        const sceneComponent = module.components.get(Scene);
-        const cameraComponent = module.components.get(Camera);
-
-        if (!sceneComponent || !cameraComponent) {
-            console.warn("scene and/or camera component missing");
-            return;
-        }
-
-        const scene = sceneComponent.scene;
-        const camera = cameraComponent.camera;
-
-        if (!scene || !camera) {
-            this.stop();
-            throw new Error("scene and/or camera missing");
-        }
-
         // this in turn calls preRender() and postRender() for each view and viewport
-        this.views.forEach(view => view.render(scene, camera));
+        this.views.forEach(view => view.render());
     }
 
     protected onAnimationFrame()
     {
         this.renderFrame();
         this.animHandler = window.requestAnimationFrame(this.onAnimationFrame);
+    }
+
+    protected onCameraComponent(event: IComponentTypeEvent<Camera>)
+    {
+        if (event.add && !this._activeCameraComponent) {
+            this._activeCameraComponent = event.component;
+        }
+        else if (event.remove && this._activeCameraComponent === event.component) {
+            this._activeCameraComponent = null;
+        }
+    }
+
+    protected onSceneComponent(event: IComponentTypeEvent<Scene>)
+    {
+        if (event.add && !this._activeSceneComponent) {
+            this._activeSceneComponent = event.component;
+        }
+        else if (event.remove && this._activeSceneComponent === event.component) {
+            this._activeSceneComponent = null;
+        }
     }
 
     protected componentAdded(component: Component): void

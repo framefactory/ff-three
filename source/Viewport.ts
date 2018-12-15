@@ -208,14 +208,10 @@ export default class Viewport implements IViewportManip
         return 1 - ((y - absRect.top) / absRect.height) * 2;
     }
 
-    render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera?: THREE.Camera)
+    updateCamera(sceneCamera?: THREE.Camera): THREE.Camera
     {
-        if (!this.enabled) {
-            return;
-        }
-
-        this._sceneCamera = camera;
-        const currentCamera: any = this._vpCamera || camera;
+        this._sceneCamera = sceneCamera;
+        const currentCamera: any = this._vpCamera || sceneCamera;
         if (!currentCamera) {
             return;
         }
@@ -230,8 +226,6 @@ export default class Viewport implements IViewportManip
         }
 
         const absRect = this._absRect;
-        renderer.setViewport(absRect.left, absRect.top, absRect.width, absRect.height);
-
         const aspect = absRect.width / absRect.height;
 
         if (aspect !== currentCamera.userData["aspect"]) {
@@ -248,13 +242,28 @@ export default class Viewport implements IViewportManip
             }
         }
 
+        return currentCamera;
+    }
+
+    applyViewport(renderer: THREE.WebGLRenderer)
+    {
+        const absRect = this._absRect;
+        renderer.setViewport(absRect.left, absRect.top, absRect.width, absRect.height);
         renderer["viewport"] = this;
-        renderer.render(scene, currentCamera);
+    }
+
+    applyPickViewport(target: THREE.WebGLRenderTarget, event: IViewportBaseEvent)
+    {
+        const absRect = this._absRect;
+        const left = event.localX - absRect.left;
+        const top = event.localY - absRect.top;
+        target.viewport.set(-left, -absRect.height + top, absRect.width, absRect.height);
+
+        //console.log("Viewport.applyPickViewport - offset: ", -left, -top);
     }
 
     extendEvent(event: IManipPointerEvent): IViewportPointerEvent;
     extendEvent(event: IManipTriggerEvent): IViewportTriggerEvent;
-
     extendEvent(event: IManipBaseEvent): IViewportBaseEvent
     {
         const vpEvent = event as IViewportBaseEvent;
@@ -266,7 +275,6 @@ export default class Viewport implements IViewportManip
 
     hitTestEvent(event: IManipPointerEvent): IViewportPointerEvent | null;
     hitTestEvent(event: IManipTriggerEvent): IViewportTriggerEvent | null;
-
     hitTestEvent(event: IManipBaseEvent): IViewportBaseEvent | null
     {
         if (!this.enabled || !this.isPointInside(event.localX, event.localY)) {

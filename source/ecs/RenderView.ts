@@ -12,11 +12,11 @@ import { Component } from "@ff/core/ecs";
 import {
     EManipPointerEventType,
     IManip,
-    IManipBaseEvent,
     IManipPointerEvent,
     IManipTriggerEvent
 } from "@ff/browser/ManipTarget";
 
+import Picker from "../Picker";
 import RenderSystem, { IRenderContext } from "./RenderSystem";
 import Viewport, { IViewportBaseEvent } from "../Viewport";
 
@@ -24,18 +24,12 @@ import Viewport, { IViewportBaseEvent } from "../Viewport";
 
 export { Viewport };
 
-export interface IPickInfo
-{
-    component: Component;
-    object3D: THREE.Object3D;
-    position: THREE.Vector3;
-    normal: THREE.Vector3;
-}
-
 export interface IViewBaseEvent extends IViewportBaseEvent
 {
     view: RenderView;
-    pick: IPickInfo;
+    object3D: THREE.Object3D;
+    component: Component;
+    stopPropagation: boolean;
 }
 
 export interface IViewPointerEvent extends IManipPointerEvent, IViewBaseEvent { }
@@ -50,8 +44,12 @@ export default class RenderView implements IManip
     readonly viewports: Viewport[] = [];
 
     protected activeViewport: Viewport = null;
+    protected activeObject3D: THREE.Object3D = null;
+    protected activeComponent: Component = null;
+
     protected shouldResize = false;
     protected context: IRenderContext;
+    protected picker: Picker;
 
     constructor(system: RenderSystem, canvas: HTMLCanvasElement, overlay: HTMLElement)
     {
@@ -66,6 +64,8 @@ export default class RenderView implements IManip
 
         this.renderer.autoClear = false;
         this.renderer.setClearColor("#0090c0");
+
+        this.picker = new Picker(this.renderer);
 
         this.context = {
             view: this,
@@ -101,8 +101,16 @@ export default class RenderView implements IManip
         this.system.detachView(this);
     }
 
-    render(scene: THREE.Scene, camera: THREE.Camera)
+    render()
     {
+        const scene = this.system.activeScene;
+        const camera = this.system.activeCamera;
+
+        if (!scene || !camera) {
+            console.warn("scene and/or camera missing");
+            return;
+        }
+
         if (this.shouldResize) {
             this.shouldResize = false;
 
@@ -126,10 +134,15 @@ export default class RenderView implements IManip
         const viewports = this.viewports;
         for (let i = 0, n = viewports.length; i < n; ++i) {
             const viewport = viewports[i];
+
             if (viewport.enabled) {
                 context.viewport = viewport;
                 this.system.preRender(context);
-                viewport.render(this.renderer, scene, camera);
+
+                const viewportCamera = viewport.updateCamera(camera);
+                viewport.applyViewport(this.renderer);
+                this.renderer.render(scene, viewportCamera);
+
                 this.system.postRender(context);
             }
         }
@@ -181,15 +194,26 @@ export default class RenderView implements IManip
             return false;
         }
 
-        if (event.type === EManipPointerEventType.Hover ||
-            (event.isPrimary && event.type === EManipPointerEventType.Down)) {
-            this.activeViewport = null;
+        let doPick = false;
+        let doHitTest = false;
+
+        if (event.type === EManipPointerEventType.Hover) {
+            doHitTest = true;
+        }
+        else if (event.isPrimary && event.type === EManipPointerEventType.Down) {
+            doHitTest = true;
+            doPick = true;
         }
 
-        const viewEvent = this.routeEvent(event);
+        const viewEvent = this.routeEvent(event, doHitTest, doPick);
 
         if (viewEvent) {
-            return system.onPointer(viewEvent) || this.activeViewport.onPointer(viewEvent);
+            system.onPointer(viewEvent);
+            if (!viewEvent.stopPropagation) {
+                viewEvent.viewport.onPointer(viewEvent);
+            }
+
+            return true;
         }
 
         return false;
@@ -202,44 +226,81 @@ export default class RenderView implements IManip
             return false;
         }
 
-        const viewEvent = this.routeEvent(event);
+        const viewEvent = this.routeEvent(event, true, true);
 
         if (viewEvent) {
-            return system.onTrigger(viewEvent) || this.activeViewport.onTrigger(viewEvent);
+            system.onTrigger(viewEvent);
+            if (!viewEvent.stopPropagation) {
+                viewEvent.viewport.onTrigger(viewEvent);
+            }
+
+            return true;
         }
 
         return false;
     }
 
-    protected routeEvent(event: IManipPointerEvent): IViewPointerEvent;
-    protected routeEvent(event: IManipTriggerEvent): IViewTriggerEvent;
-    protected routeEvent(event: IManipBaseEvent): IViewBaseEvent
+    protected routeEvent(event: IManipPointerEvent, doHitTest: boolean, doPick: boolean): IViewPointerEvent;
+    protected routeEvent(event: IManipTriggerEvent, doHitTest: boolean, doPick: boolean): IViewTriggerEvent;
+    protected routeEvent(event, doHitTest, doPick)
     {
+        let viewport = this.activeViewport;
+        let object3D = this.activeObject3D;
+        let component = this.activeComponent;
+
         // if no active viewport, perform a hit test against all viewports
-        if (!this.activeViewport) {
+        if (doHitTest) {
+            viewport = null;
             const viewports = this.viewports;
             for (let i = 0, n = viewports.length; i < n; ++i) {
                 const vp = viewports[i];
                 if (vp.enabled && vp.isPointInside(event.localX, event.localY)) {
-                    this.activeViewport = vp;
+                    viewport = vp;
                     break;
                 }
             }
         }
 
-        const viewport = this.activeViewport;
-
-        // if we have an active viewport now, augment event with viewport/view information
-        if (viewport) {
-            const viewEvent = event as IViewBaseEvent;
-            viewEvent.view = this;
-            viewEvent.viewport = viewport;
-            viewEvent.deviceX = viewport.getDeviceX(event.localX);
-            viewEvent.deviceY = viewport.getDeviceY(event.localY);
-            return viewEvent;
+        // without an active viewport, return null to cancel the event
+        if (!viewport) {
+            return null;
         }
 
-        // without an active viewport, return null to cancel the event
-        return null;
+        // if we have an active viewport now, augment event with viewport/view information
+        const viewEvent = event as IViewBaseEvent;
+        viewEvent.view = this;
+        viewEvent.viewport = viewport;
+        viewEvent.deviceX = viewport.getDeviceX(event.localX);
+        viewEvent.deviceY = viewport.getDeviceY(event.localY);
+        viewEvent.stopPropagation = false;
+
+        // perform 3D pick
+        if (doPick) {
+            const scene = this.system.activeScene;
+            const camera = this.system.activeCamera;
+
+            if (scene && camera) {
+                const index = this.picker.pickIndex(scene, camera, event);
+                if (index === 0) {
+                    console.log("Pick Index - #0 Background");
+                }
+                else {
+                    object3D = this.system.getObjectByIndex(index);
+                    if (object3D) {
+                        component = object3D.userData["component"];
+                        console.log("Pick Index - #%s Component: %s", index, component.type);
+                    }
+                }
+            }
+        }
+
+        viewEvent.object3D = object3D;
+        viewEvent.component = component;
+
+        this.activeViewport = viewport;
+        this.activeObject3D = object3D;
+        this.activeComponent = component;
+
+        return viewEvent;
     }
 }

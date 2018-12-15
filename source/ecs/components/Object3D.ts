@@ -13,6 +13,8 @@ import {
     Entity
 } from "@ff/core/ecs";
 
+import IndexShader from "../../shaders/IndexShader";
+import RenderSystem from "../RenderSystem";
 import Transform from "./Transform";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,12 +56,20 @@ export default class Object3D extends Component
         super(entity, id);
         this.addEvent("object");
 
+        this._onBeforeRender = this._onBeforeRender.bind(this);
+        this._onAfterRender = this._onAfterRender.bind(this);
+
         if (!this.beforeRender) {
             this.beforeRender = null;
         }
         if (!this.afterRender) {
             this.afterRender = null;
         }
+    }
+
+    get renderSystem(): RenderSystem
+    {
+        return this.system as RenderSystem;
     }
 
     get transform(): Transform
@@ -74,24 +84,28 @@ export default class Object3D extends Component
 
     set object3D(object: THREE.Object3D)
     {
-        if (this._object3D && this._transform) {
-            this._transform.removeObject3D(this._object3D);
-            this._object3D.onBeforeRender = undefined;
-            this._object3D.onAfterRender = undefined;
+        const currentObject = this._object3D;
+        if (currentObject && this._transform) {
+            this._transform.removeObject3D(currentObject);
+            this.renderSystem.removeObject3D(currentObject);
+            currentObject.onBeforeRender = undefined;
+            currentObject.onAfterRender = undefined;
+            currentObject.userData["component"] = null;
         }
 
-        this.emit<IObject3DObjectEvent>("object", { current: this._object3D, next: object });
+        this.emit<IObject3DObjectEvent>("object", { current: currentObject, next: object });
         this._object3D = object;
 
         if (object) {
             object.matrixAutoUpdate = false;
+            object.userData["component"] = this;
+            object.onBeforeRender = this._onBeforeRender;
 
-            if (this.beforeRender) {
-                object.onBeforeRender = this._onBeforeRender;
-            }
             if (this.afterRender) {
                 object.onAfterRender = this._onAfterRender;
             }
+
+            this.renderSystem.addObject3D(object);
 
             if (this._transform) {
                 this._transform.addObject3D(object);
@@ -138,14 +152,21 @@ export default class Object3D extends Component
         material: THREE.Material,
         group: THREE.Group)
     {
-        _renderContext.renderer = renderer;
-        _renderContext.scene = scene;
-        _renderContext.camera = camera;
-        _renderContext.geometry = geometry;
-        _renderContext.material = material;
-        _renderContext.group = group;
+        const shader = material as IndexShader;
+        if (shader.isIndexShader) {
+            shader.setIndex(this._object3D.userData["index"]);
+        }
 
-        this.beforeRender(_renderContext);
+        if (this.beforeRender) {
+            _renderContext.renderer = renderer;
+            _renderContext.scene = scene;
+            _renderContext.camera = camera;
+            _renderContext.geometry = geometry;
+            _renderContext.material = material;
+            _renderContext.group = group;
+
+            this.beforeRender(_renderContext);
+        }
     }
 
     protected afterRender?(context: IObject3DRenderContext);

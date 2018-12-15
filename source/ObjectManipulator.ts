@@ -37,6 +37,7 @@ export interface IManipPattern
 }
 
 const _vec3 = new THREE.Vector3();
+const _vec3a = new THREE.Vector3();
 
 const _defaultPattern: IManipPattern[] = [
     { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
@@ -66,6 +67,7 @@ export default class ObjectManipulator implements IManip
 
     orientationEnabled = true;
     offsetEnabled = true;
+    cameraMode = true;
     orthographicMode = false;
 
     protected mode = EManipMode.Off;
@@ -282,28 +284,31 @@ export default class ObjectManipulator implements IManip
             offset, minOffset, maxOffset
         } = this;
 
+        let inverse = this.cameraMode ? -1 : 1;
+
         if (this.orientationEnabled) {
-            orientation.x += dPitch * 300 / this.viewportHeight;
-            orientation.y += dHead * 300 / this.viewportHeight;
-            orientation.z += dRoll * 300 / this.viewportHeight;
+            orientation.x += inverse * dPitch * 300 / this.viewportHeight;
+            orientation.y += inverse * dHead * 300 / this.viewportHeight;
+            orientation.z += inverse * dRoll * 300 / this.viewportHeight;
+
+            // check limits
+            orientation.x = _limit(orientation.x, minOrientation[0], maxOrientation[0]);
+            orientation.y = _limit(orientation.y, minOrientation[1], maxOrientation[1]);
+            orientation.z = _limit(orientation.z, minOrientation[2], maxOrientation[2]);
         }
 
         let factor;
 
         if (this.orthographicMode) {
-            factor = this.size = this.size * dScale;
+            factor = this.size = dScale * this.size;
         } else {
-            factor = offset.z = offset.z * dScale;
+            factor = offset.z = dScale * offset.z;
         }
 
-        offset.x -= dX * factor * 2 / this.viewportHeight;
-        offset.y += dY * factor * 2 / this.viewportHeight;
+        offset.x += dX * factor * inverse * 2 / this.viewportHeight;
+        offset.y -= dY * factor * inverse * 2 / this.viewportHeight;
 
         // check limits
-        orientation.x = _limit(orientation.x, minOrientation[0], maxOrientation[0]);
-        orientation.y = _limit(orientation.y, minOrientation[1], maxOrientation[1]);
-        orientation.z = _limit(orientation.z, minOrientation[2], maxOrientation[2]);
-
         offset.x = _limit(offset.x, minOffset[0], maxOffset[0]);
         offset.y = _limit(offset.y, minOffset[1], maxOffset[1]);
 

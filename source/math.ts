@@ -32,9 +32,9 @@ const math = {
 
     composeOrbitMatrix: function(orientation: THREE.Vector3, offset: THREE.Vector3, result?: THREE.Matrix4): THREE.Matrix4
     {
-        const pitch = -orientation.x;
-        const head = -orientation.y;
-        const roll = -orientation.z;
+        const pitch = orientation.x;
+        const head = orientation.y;
+        const roll = orientation.z;
 
         const ox = offset.x;
         const oy = offset.y;
@@ -56,16 +56,6 @@ const math = {
         const m20 = -sinY;
         const m21 = cosY * sinX;
         const m22 = cosY * cosX;
-
-        //const m00 = cosZ * cosY + sinZ * sinX * sinY;
-        //const m01 = -sinZ * cosY + cosZ * sinX * sinY;
-        //const m02 = cosX * sinY;
-        //const m10 = sinZ * cosX;
-        //const m11 = cosZ * cosX;
-        //const m12 = -sinX;
-        //const m20 = -cosZ * sinY + sinZ * sinX * cosY;
-        //const m21 = sinZ * sinY + cosZ * sinX * cosY;
-        //const m22 = cosX * cosY;
 
         result = result || new THREE.Matrix4();
         const e = result.elements;
@@ -93,7 +83,7 @@ const math = {
 
     decomposeOrbitMatrix: function(matrix: THREE.Matrix4, orientationOut: THREE.Vector3, offsetOut: THREE.Vector3)
     {
-        _euler.setFromRotationMatrix(matrix, "ZYX" /* "YXZ" */);
+        _euler.setFromRotationMatrix(matrix, "ZYX");
         _euler.toVector3(orientationOut);
 
         _mat4.getInverse(matrix);
