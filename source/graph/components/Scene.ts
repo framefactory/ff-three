@@ -9,6 +9,7 @@ import * as THREE from "three";
 
 import { Hierarchy } from "@ff/graph";
 import Transform from "./Transform";
+import { IPointerEvent } from "../RenderView";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +38,7 @@ export default class Scene extends Hierarchy
     create()
     {
         this._scene = new THREE.Scene();
+        this.on("pointer", this.onPointer, this);
     }
 
     update()
@@ -54,5 +56,9 @@ export default class Scene extends Hierarchy
     {
         this._scene.remove(component.object3D);
         super.removeChild(component);
+    }
+
+    protected onPointer(event: IPointerEvent)
+    {
     }
 }

@@ -7,10 +7,11 @@
 
 import * as THREE from "three";
 
-import { Component } from "@ff/graph";
+import { Node, Component } from "@ff/graph";
 
 import {
-    EManipPointerEventType,
+    EManipPointerEventType as EPointerEventType,
+    EManipTriggerEventType as ETriggerEventType,
     IManip,
     IManipPointerEvent,
     IManipTriggerEvent
@@ -22,18 +23,19 @@ import Viewport, { IViewportBaseEvent } from "../Viewport";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { Viewport };
+export { Viewport, EPointerEventType, ETriggerEventType };
 
-export interface IViewBaseEvent extends IViewportBaseEvent
+interface IBaseEvent extends IViewportBaseEvent
 {
     view: RenderView;
     object3D: THREE.Object3D;
     component: Component;
+    node: Node;
     stopPropagation: boolean;
 }
 
-export interface IViewPointerEvent extends IManipPointerEvent, IViewBaseEvent { }
-export interface IViewTriggerEvent extends IManipTriggerEvent, IViewBaseEvent { }
+export interface IPointerEvent extends IManipPointerEvent, IBaseEvent { }
+export interface ITriggerEvent extends IManipTriggerEvent, IBaseEvent { }
 
 export default class RenderView implements IManip
 {
@@ -197,10 +199,10 @@ export default class RenderView implements IManip
         let doPick = false;
         let doHitTest = false;
 
-        if (event.type === EManipPointerEventType.Hover) {
+        if (event.type === EPointerEventType.Hover) {
             doHitTest = true;
         }
-        else if (event.isPrimary && event.type === EManipPointerEventType.Down) {
+        else if (event.isPrimary && event.type === EPointerEventType.Down) {
             doHitTest = true;
             doPick = true;
         }
@@ -240,8 +242,8 @@ export default class RenderView implements IManip
         return false;
     }
 
-    protected routeEvent(event: IManipPointerEvent, doHitTest: boolean, doPick: boolean): IViewPointerEvent;
-    protected routeEvent(event: IManipTriggerEvent, doHitTest: boolean, doPick: boolean): IViewTriggerEvent;
+    protected routeEvent(event: IManipPointerEvent, doHitTest: boolean, doPick: boolean): IPointerEvent;
+    protected routeEvent(event: IManipTriggerEvent, doHitTest: boolean, doPick: boolean): ITriggerEvent;
     protected routeEvent(event, doHitTest, doPick)
     {
         let viewport = this.activeViewport;
@@ -267,7 +269,7 @@ export default class RenderView implements IManip
         }
 
         // if we have an active viewport now, augment event with viewport/view information
-        const viewEvent = event as IViewBaseEvent;
+        const viewEvent = event as IBaseEvent;
         viewEvent.view = this;
         viewEvent.viewport = viewport;
         viewEvent.deviceX = viewport.getDeviceX(event.localX);
@@ -278,6 +280,8 @@ export default class RenderView implements IManip
         if (doPick) {
             const scene = this.system.activeScene;
             const camera = this.system.activeCamera;
+            object3D = null;
+            component = null;
 
             if (scene && camera) {
                 const index = this.picker.pickIndex(scene, camera, event);
@@ -296,6 +300,7 @@ export default class RenderView implements IManip
 
         viewEvent.object3D = object3D;
         viewEvent.component = component;
+        viewEvent.node = component ? component.node : null;
 
         this.activeViewport = viewport;
         this.activeObject3D = object3D;

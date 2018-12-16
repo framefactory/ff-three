@@ -19,8 +19,10 @@ import {
 
 import RenderView, {
     Viewport,
-    IViewPointerEvent,
-    IViewTriggerEvent
+    IPointerEvent,
+    ITriggerEvent,
+    EPointerEventType,
+    ETriggerEventType
 } from "./RenderView";
 
 import Scene from "./components/Scene";
@@ -29,6 +31,8 @@ import Camera from "./components/Camera";
 ////////////////////////////////////////////////////////////////////////////////
 
 let _nextObjectIndex = 1;
+
+export { IPointerEvent, ITriggerEvent, EPointerEventType, ETriggerEventType };
 
 export interface IRenderContext
 {
@@ -40,8 +44,8 @@ export interface IRenderContext
 
 export interface IManipTarget extends Component
 {
-    onPointer?: (event: IViewPointerEvent) => boolean;
-    onTrigger?: (event: IViewTriggerEvent) => boolean;
+    onPointer?: (event: IPointerEvent) => boolean;
+    onTrigger?: (event: ITriggerEvent) => boolean;
 }
 
 export default class RenderSystem extends System
@@ -144,30 +148,28 @@ export default class RenderSystem extends System
         return this.objects[index];
     }
 
-    onPointer(event: IViewPointerEvent)
+    onPointer(event: IPointerEvent)
     {
-        let handled = false;
-        this.manipTargets.forEach(target => {
-            if (target.onPointer && target.onPointer(event)) {
-                handled = true;
-            }
-        });
+        const target = event.component || this.activeSceneComponent;
+        this.emitComponentEvent(target, "pointer", event);
 
-        return handled;
+        if (!event.stopPropagation) {
+            this.emitAny("pointer", event);
+        }
+
+        return true;
     }
 
-    onTrigger(event: IViewTriggerEvent)
+    onTrigger(event: ITriggerEvent)
     {
-        //console.log("RenderSystem.onTrigger - %s", EManipTriggerEventType[event.type]);
+        const target = event.component || this.activeSceneComponent;
+        this.emitComponentEvent(target, "trigger", event);
 
-        let handled = false;
-        this.manipTargets.forEach(target => {
-            if (target.onTrigger && target.onTrigger(event)) {
-                handled = true;
-            }
-        });
+        if (!event.stopPropagation) {
+            this.emitAny("trigger", event);
+        }
 
-        return handled;
+        return true;
     }
 
     protected renderFrame()

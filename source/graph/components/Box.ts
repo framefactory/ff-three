@@ -8,6 +8,7 @@
 import * as THREE from "three";
 
 import { types } from "@ff/graph";
+import { IPointerEvent } from "../RenderView";
 import Geometry from "./Geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,6 +22,12 @@ export default class Box extends Geometry
         segments: types.Vector3("Segments", [ 1, 1, 1])
     });
 
+    create()
+    {
+        super.create();
+        this.on("pointer", this.onPointer, this);
+    }
+
     update()
     {
         const { size, segments } = this.ins;
@@ -32,5 +39,9 @@ export default class Box extends Geometry
         }
 
         return true;
+    }
+
+    protected onPointer(event: IPointerEvent)
+    {
     }
 }
