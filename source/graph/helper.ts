@@ -6,18 +6,16 @@
  */
 
 import {
-    Entity,
-    Module,
+    Node,
+    Graph,
     Hierarchy
-} from "@ff/core/ecs";
+} from "@ff/graph";
 
 import {
-    BasicMaterial,
     Box,
     Camera,
     DirectionalLight,
     Mesh,
-    Oscillator,
     PhongMaterial,
     PointLight,
     Scene,
@@ -28,54 +26,54 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const createScene = function(module: Module, name?: string): Entity
+const createScene = function(graph: Graph, name?: string): Node
 {
-    const entity = module.createEntity(name);
+    const entity = graph.createNode(name);
     entity.createComponent(Scene);
     return entity;
 };
 
-const createTransform = function(parent: Entity, name?: string): Entity
+const createTransform = function(parent: Node, name?: string): Node
 {
     const hierarchy = parent.components.get(Hierarchy);
     if (!hierarchy) {
         throw new Error("can't attach to parent; missing a hierarchy component");
     }
 
-    const entity = parent.module.createEntity(name);
+    const entity = parent.graph.createNode(name);
     hierarchy.addChild(entity.createComponent(Transform));
     return entity;
 };
 
-const createCamera = function(parent: Entity, name?: string): Entity
+const createCamera = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(Camera);
     return entity;
 };
 
-const createDirectionalLight = function(parent: Entity, name?: string): Entity
+const createDirectionalLight = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(DirectionalLight);
     return entity;
 };
 
-const createPointLight = function(parent: Entity, name?: string): Entity
+const createPointLight = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(PointLight);
     return entity;
 };
 
-const createSpotLight = function(parent: Entity, name?: string): Entity
+const createSpotLight = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(SpotLight);
     return entity;
 };
 
-const createBox = function(parent: Entity, name?: string): Entity
+const createBox = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(Mesh);
@@ -84,7 +82,7 @@ const createBox = function(parent: Entity, name?: string): Entity
     return entity;
 };
 
-const createTorus = function(parent: Entity, name?: string): Entity
+const createTorus = function(parent: Node, name?: string): Node
 {
     const entity = createTransform(parent, name);
     entity.createComponent(Mesh);

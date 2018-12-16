@@ -5,7 +5,7 @@
  * License: MIT
  */
 
-import { types } from "@ff/core/ecs";
+import { types } from "@ff/graph";
 
 import UniversalCamera, { EProjection } from "../../UniversalCamera";
 import Object3D from "./Object3D";

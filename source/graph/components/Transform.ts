@@ -13,8 +13,8 @@ import math from "@ff/core/math";
 import {
     types,
     Hierarchy,
-    Entity
-} from "@ff/core/ecs";
+    Node
+} from "@ff/graph";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,9 +47,9 @@ export default class Transform extends Hierarchy
 
     private _object: THREE.Object3D;
 
-    constructor(entity: Entity, id?: string)
+    constructor(node: Node, id?: string)
     {
-        super(entity, id);
+        super(node, id);
 
         this._object = new THREE.Object3D();
         this._object.matrixAutoUpdate = false;
@@ -88,7 +88,7 @@ export default class Transform extends Hierarchy
         object.updateMatrix();
 
         (object.matrix as any).toArray(matrix.value);
-        matrix.push();
+        matrix.set();
 
         return true;
     }

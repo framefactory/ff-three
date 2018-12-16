@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 
-import { Component } from "@ff/core/ecs";
+import { Component } from "@ff/graph";
 
 import {
     EManipPointerEventType,

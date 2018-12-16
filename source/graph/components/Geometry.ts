@@ -5,7 +5,7 @@
  * License: MIT
  */
 
-import { Component, Entity } from "@ff/core/ecs";
+import { Component, Node } from "@ff/graph";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -17,9 +17,9 @@ export default class Geometry extends Component
 
     private _geometry: THREE.BufferGeometry = null;
 
-    constructor(entity: Entity, id?: string)
+    constructor(node: Node, id?: string)
     {
-        super(entity, id);
+        super(node, id);
         this.addEvent(Geometry.geometryEvent);
     }
 

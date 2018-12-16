@@ -10,8 +10,8 @@ import * as THREE from "three";
 import {
     Component,
     IComponentEvent,
-    Entity
-} from "@ff/core/ecs";
+    Node
+} from "@ff/graph";
 
 import IndexShader from "../../shaders/IndexShader";
 import RenderSystem from "../RenderSystem";
@@ -51,9 +51,9 @@ export default class Object3D extends Component
     private _transform: Transform = null;
     private _object3D: THREE.Object3D = null;
 
-    constructor(entity: Entity, id?: string)
+    constructor(node: Node, id?: string)
     {
-        super(entity, id);
+        super(node, id);
         this.addEvent("object");
 
         this._onBeforeRender = this._onBeforeRender.bind(this);

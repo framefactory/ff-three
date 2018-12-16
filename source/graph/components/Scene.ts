@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 
-import { Hierarchy } from "@ff/core/ecs";
+import { Hierarchy } from "@ff/graph";
 import Transform from "./Transform";
 
 ////////////////////////////////////////////////////////////////////////////////

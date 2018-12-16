@@ -5,14 +5,13 @@
  * License: MIT
  */
 
-import { Registry } from "@ff/core/ecs";
+import { Registry } from "@ff/graph";
 
 import BasicMaterial from "./BasicMaterial";
 import Box from "./Box";
 import Camera from "./Camera";
 import DirectionalLight from "./DirectionalLight";
 import Mesh from "./Mesh";
-import Oscillator from "./Oscillator";
 import PhongMaterial from "./PhongMaterial";
 import PointLight from "./PointLight";
 import Scene from "./Scene";
@@ -28,14 +27,13 @@ export {
     Camera,
     DirectionalLight,
     Mesh,
-    Oscillator,
     PhongMaterial,
     PointLight,
     Scene,
     SpotLight,
     Torus,
     Transform
-}
+};
 
 export function registerComponents(registry: Registry)
 {
@@ -45,7 +43,6 @@ export function registerComponents(registry: Registry)
         Camera,
         DirectionalLight,
         Mesh,
-        Oscillator,
         PhongMaterial,
         PointLight,
         Scene,
@@ -53,4 +50,4 @@ export function registerComponents(registry: Registry)
         Torus,
         Transform
     ]);
-}
+};

@@ -7,40 +7,40 @@
 
 import * as THREE from "three";
 
-import { types } from "@ff/core/ecs";
+import { types } from "@ff/graph";
 import Light from "./Light";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class PointLight extends Light
+export default class DirectionalLight extends Light
 {
-    static readonly type: string = "PointLight";
+    static readonly type: string = "DirectionalLight";
 
     ins = this.ins.append({
-        distance: types.Number("Distance"),
-        decay: types.Number("Decay", 1)
+        position: types.Vector3("Position", [ 0, 1, 0 ]),
+        target: types.Vector3("Target")
     });
 
-    get light(): THREE.PointLight
+    get light(): THREE.DirectionalLight
     {
-        return this.object3D as THREE.PointLight;
+        return this.object3D as THREE.DirectionalLight;
     }
 
     create()
     {
         super.create();
-        this.object3D = new THREE.PointLight();
+        this.object3D = new THREE.DirectionalLight();
     }
 
     update()
     {
         const light = this.light;
-        const { color, intensity, distance, decay } = this.ins;
+        const { color, intensity, position, target } = this.ins;
 
         light.color.fromArray(color.value);
         light.intensity = intensity.value;
-        light.distance = distance.value;
-        light.decay = decay.value;
+        light.position.fromArray(position.value);
+        light.target.position.fromArray(target.value);
 
         light.updateMatrix();
         return true;

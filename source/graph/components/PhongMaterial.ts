@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 
-import { types } from "@ff/core/ecs";
+import { types } from "@ff/graph";
 import Material from "./Material";
 
 ////////////////////////////////////////////////////////////////////////////////

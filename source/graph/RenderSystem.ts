@@ -15,7 +15,7 @@ import {
     System,
     Registry,
     Pulse
-} from "@ff/core/ecs";
+} from "@ff/graph";
 
 import RenderView, {
     Viewport,

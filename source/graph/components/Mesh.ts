@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 
-import { ComponentTracker } from "@ff/core/ecs";
+import { ComponentTracker } from "@ff/graph";
 
 import Geometry from "./Geometry";
 import Material from "./Material";
