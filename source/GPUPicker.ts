@@ -17,7 +17,7 @@ import { IViewportBaseEvent } from "./Viewport";
 
 const _vec3 = new THREE.Vector3();
 
-export default class Picker
+export default class GPUPicker
 {
     protected renderer: THREE.WebGLRenderer;
 
