@@ -36,8 +36,8 @@ export interface IManipPattern
     metaKey?: boolean;
 }
 
-const _vec3 = new THREE.Vector3();
 const _vec3a = new THREE.Vector3();
+const _vec3b = new THREE.Vector3();
 
 const _defaultPattern: IManipPattern[] = [
     { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
@@ -55,15 +55,15 @@ const _limit = (val, min, max) => !isNaN(min) && val < min ? min : (!isNaN(max) 
 
 export default class ObjectManipulator implements IManip
 {
-    readonly orientation = new THREE.Vector3(0, 0, 0);
-    readonly offset = new THREE.Vector3(0, 0, 50);
+    orientation = [ 0, 0, 0 ];
+    offset = [ 0, 0, 50 ];
     size = 50;
     zoom = 1;
 
-    readonly minOrientation = [ -90, NaN, NaN ];
-    readonly maxOrientation = [ 90, NaN, NaN ];
-    readonly minOffset = [ NaN, NaN, 0.1 ];
-    readonly maxOffset = [ NaN, NaN, 100 ];
+    minOrientation = [ -90, NaN, NaN ];
+    maxOrientation = [ 90, NaN, NaN ];
+    minOffset = [ NaN, NaN, 0.1 ];
+    maxOffset = [ NaN, NaN, 100 ];
 
     orientationEnabled = true;
     offsetEnabled = true;
@@ -140,10 +140,11 @@ export default class ObjectManipulator implements IManip
         this.viewportHeight = height;
     }
 
-    fromCamera(camera: THREE.Camera)
+    setFromCamera(camera: THREE.Camera)
     {
-        threeMath.decomposeOrbitMatrix(camera.matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(math.RAD2DEG);
+        threeMath.decomposeOrbitMatrix(camera.matrix, _vec3a, _vec3b);
+        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
+        _vec3b.toArray(this.offset);
 
         const cam = camera as any;
 
@@ -152,14 +153,34 @@ export default class ObjectManipulator implements IManip
         }
     }
 
-    toCamera(camera: THREE.Camera): boolean
+    setFromObject(object: THREE.Object3D)
     {
-        if (!this.update()) {
-            return false;
-        }
+        threeMath.decomposeOrbitMatrix(object.matrix, _vec3a, _vec3b);
+        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
+        _vec3b.toArray(this.offset);
 
-        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
-        threeMath.composeOrbitMatrix(_vec3, this.offset, camera.matrix);
+        this.orthographicMode = false;
+    }
+
+    setFromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
+    {
+        threeMath.decomposeOrbitMatrix(matrix, _vec3a, _vec3b);
+        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
+        _vec3b.toArray(this.offset);
+
+        this.orthographicMode = false;
+    }
+
+    /**
+     * Updates the manipulator. If its state has changed, updates the transform matrix of
+     * the given camera. If the camera is orthographic, its size parameter is updated as well.
+     * @param camera
+     */
+    toCamera(camera: THREE.Camera)
+    {
+        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.fromArray(this.offset);
+        threeMath.composeOrbitMatrix(_vec3a, _vec3b, camera.matrix);
         camera.matrixWorldNeedsUpdate = true;
 
         const cam = camera as any;
@@ -179,40 +200,33 @@ export default class ObjectManipulator implements IManip
         }
     }
 
-    fromObject(object: THREE.Object3D)
+    /**
+     * Sets the given object's matrix from the manipulator's current orientation and offset.
+     * @param object
+     */
+    toObject(object: THREE.Object3D)
     {
-        threeMath.decomposeOrbitMatrix(object.matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(math.RAD2DEG);
-        this.orthographicMode = false;
+        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.fromArray(this.offset);
+        threeMath.composeOrbitMatrix(_vec3a, _vec3b, object.matrix);
+        object.matrixWorldNeedsUpdate = true;
     }
 
-    toObject(object: THREE.Object3D): boolean
+    /**
+     * Sets the given matrix from the manipulator's current orientation and offset.
+     * @param matrix
+     */
+    toMatrix(matrix: THREE.Matrix4)
     {
-        if (!this.update()) {
-            return false;
-        }
-
-        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
-        threeMath.composeOrbitMatrix(_vec3, this.offset, object.matrix);
+        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.fromArray(this.offset);
+        threeMath.composeOrbitMatrix(_vec3a, _vec3b, matrix);
     }
 
-    fromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
-    {
-        threeMath.decomposeOrbitMatrix(matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(math.RAD2DEG);
-        this.orthographicMode = false;
-    }
-
-    toMatrix(matrix: THREE.Matrix4, invert: boolean = false): boolean
-    {
-        if (!this.update()) {
-            return false;
-        }
-
-        _vec3.copy(this.orientation).multiplyScalar(math.DEG2RAD);
-        threeMath.composeOrbitMatrix(_vec3, this.offset, matrix);
-    }
-
+    /**
+     * Updates the manipulator.
+     * @returns true if the state has changed during the update.
+     */
     update(): boolean
     {
         if (this.phase === EManipPhase.Off && this.deltaWheel === 0) {
@@ -287,36 +301,39 @@ export default class ObjectManipulator implements IManip
         let inverse = this.cameraMode ? -1 : 1;
 
         if (this.orientationEnabled) {
-            orientation.x += inverse * dPitch * 300 / this.viewportHeight;
-            orientation.y += inverse * dHead * 300 / this.viewportHeight;
-            orientation.z += inverse * dRoll * 300 / this.viewportHeight;
+            orientation[0] += inverse * dPitch * 300 / this.viewportHeight;
+            orientation[1] += inverse * dHead * 300 / this.viewportHeight;
+            orientation[2] += inverse * dRoll * 300 / this.viewportHeight;
 
             // check limits
-            orientation.x = _limit(orientation.x, minOrientation[0], maxOrientation[0]);
-            orientation.y = _limit(orientation.y, minOrientation[1], maxOrientation[1]);
-            orientation.z = _limit(orientation.z, minOrientation[2], maxOrientation[2]);
+            orientation[0] = _limit(orientation[0], minOrientation[0], maxOrientation[0]);
+            orientation[1] = _limit(orientation[1], minOrientation[1], maxOrientation[1]);
+            orientation[2] = _limit(orientation[2], minOrientation[2], maxOrientation[2]);
         }
 
-        let factor;
+        if (this.offsetEnabled) {
+            let factor;
 
-        if (this.orthographicMode) {
-            factor = this.size = dScale * this.size;
-        } else {
-            factor = offset.z = dScale * offset.z;
-        }
+            if (this.orthographicMode) {
+                factor = this.size = dScale * this.size;
+                offset[2] = maxOffset[2];
+            } else {
+                factor = offset[2] = dScale * offset[2];
+            }
 
-        offset.x += dX * factor * inverse * 2 / this.viewportHeight;
-        offset.y -= dY * factor * inverse * 2 / this.viewportHeight;
+            offset[0] += dX * factor * inverse * 2 / this.viewportHeight;
+            offset[1] -= dY * factor * inverse * 2 / this.viewportHeight;
 
-        // check limits
-        offset.x = _limit(offset.x, minOffset[0], maxOffset[0]);
-        offset.y = _limit(offset.y, minOffset[1], maxOffset[1]);
+            // check limits
+            offset[0] = _limit(offset[0], minOffset[0], maxOffset[0]);
+            offset[1] = _limit(offset[1], minOffset[1], maxOffset[1]);
 
-        if (this.orthographicMode) {
-            this.size = _limit(this.size, minOffset[2], maxOffset[2]);
-        }
-        else {
-            offset.z = _limit(offset.z, minOffset[2], maxOffset[2]);
+            if (this.orthographicMode) {
+                this.size = _limit(this.size, minOffset[2], maxOffset[2]);
+            }
+            else {
+                offset[2] = _limit(offset[2], minOffset[2], maxOffset[2]);
+            }
         }
     }
 

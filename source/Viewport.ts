@@ -219,9 +219,10 @@ export default class Viewport implements IViewportManip
         if (this._manip) {
             if (this._initManip) {
                 this._initManip = false;
-                this._manip.fromCamera(currentCamera);
+                this._manip.setFromCamera(currentCamera);
             }
 
+            this._manip.update();
             this._manip.toCamera(currentCamera);
         }
 
