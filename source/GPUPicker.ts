@@ -11,7 +11,7 @@ import IndexShader from "./shaders/IndexShader";
 import PositionShader from "./shaders/PositionShader";
 import NormalShader from "./shaders/NormalShader";
 
-import { IViewportBaseEvent } from "./Viewport";
+import { IBaseEvent } from "./Viewport";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ export default class GPUPicker
 
     }
 
-    pickIndex(scene: THREE.Scene, camera: THREE.Camera, event: IViewportBaseEvent): number
+    pickIndex(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): number
     {
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
@@ -70,7 +70,7 @@ export default class GPUPicker
     }
 
     pickPosition(scene: THREE.Scene, camera: THREE.Camera,
-        boundingBox: THREE.Box3, event: IViewportBaseEvent): THREE.Vector3
+        boundingBox: THREE.Box3, event: IBaseEvent): THREE.Vector3
     {
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
@@ -110,7 +110,7 @@ export default class GPUPicker
         return position.multiply(_vec3).add(boundingBox.min);
     }
 
-    pickNormal(scene: THREE.Scene, camera: THREE.Camera, event: IViewportBaseEvent): THREE.Vector3
+    pickNormal(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): THREE.Vector3
     {
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);

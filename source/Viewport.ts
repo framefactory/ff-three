@@ -7,27 +7,35 @@
 
 import * as THREE from "three";
 
-import { IManipBaseEvent, IManipPointerEvent, IManipTriggerEvent } from "@ff/browser/ManipTarget";
+import {
+    IBaseEvent as IManipBaseEvent,
+    IPointerEvent as IManipPointerEvent,
+    ITriggerEvent as IManipTriggerEvent
+} from "@ff/browser/ManipTarget";
 
-import UniversalCamera, { EProjection, EViewPreset } from "./UniversalCamera";
+import UniversalCamera, {
+    EProjection,
+    EViewPreset
+} from "./UniversalCamera";
+
 import ObjectManipulator from "./ObjectManipulator";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IViewportBaseEvent extends IManipBaseEvent
+export interface IBaseEvent extends IManipBaseEvent
 {
     viewport: Viewport | null;
     deviceX: number;
     deviceY: number;
 }
 
-export interface IViewportPointerEvent extends IManipPointerEvent, IViewportBaseEvent { }
-export interface IViewportTriggerEvent extends IManipTriggerEvent, IViewportBaseEvent { }
+export interface IPointerEvent extends IManipPointerEvent, IBaseEvent { }
+export interface ITriggerEvent extends IManipTriggerEvent, IBaseEvent { }
 
 export interface IViewportManip
 {
-    onPointer: (event: IViewportPointerEvent) => boolean;
-    onTrigger: (event: IViewportTriggerEvent) => boolean;
+    onPointer: (event: IPointerEvent) => boolean;
+    onTrigger: (event: ITriggerEvent) => boolean;
 }
 
 export interface IViewportRect
@@ -253,7 +261,7 @@ export default class Viewport implements IViewportManip
         renderer["viewport"] = this;
     }
 
-    applyPickViewport(target: THREE.WebGLRenderTarget, event: IViewportBaseEvent)
+    applyPickViewport(target: THREE.WebGLRenderTarget, event: IBaseEvent)
     {
         const absRect = this._absRect;
         const left = event.localX - absRect.left;
@@ -263,32 +271,23 @@ export default class Viewport implements IViewportManip
         //console.log("Viewport.applyPickViewport - offset: ", -left, -top);
     }
 
-    extendEvent(event: IManipPointerEvent): IViewportPointerEvent;
-    extendEvent(event: IManipTriggerEvent): IViewportTriggerEvent;
-    extendEvent(event: IManipBaseEvent): IViewportBaseEvent
+    toViewportEvent(event: IManipPointerEvent): IPointerEvent;
+    toViewportEvent(event: IManipTriggerEvent): ITriggerEvent;
+    toViewportEvent(event: IManipBaseEvent): IBaseEvent
     {
-        const vpEvent = event as IViewportBaseEvent;
+        const vpEvent = event as IBaseEvent;
         vpEvent.viewport = this;
         vpEvent.deviceX = this.getDeviceX(event.localX);
         vpEvent.deviceY = this.getDeviceY(event.localY);
         return vpEvent;
     }
 
-    hitTestEvent(event: IManipPointerEvent): IViewportPointerEvent | null;
-    hitTestEvent(event: IManipTriggerEvent): IViewportTriggerEvent | null;
-    hitTestEvent(event: IManipBaseEvent): IViewportBaseEvent | null
+    isInside(event: IBaseEvent): boolean
     {
-        if (!this.enabled || !this.isPointInside(event.localX, event.localY)) {
-            return null;
-        }
-        const vpEvent = event as IViewportTriggerEvent;
-        vpEvent.viewport = this;
-        vpEvent.deviceX = this.getDeviceX(event.localX);
-        vpEvent.deviceY = this.getDeviceY(event.localY);
-        return vpEvent;
+        return this.enabled && this.isPointInside(event.localX, event.localY);
     }
 
-    onPointer(event: IViewportPointerEvent)
+    onPointer(event: IPointerEvent)
     {
         if (this.enabled && this._manip) {
             return this._manip.onPointer(event);
@@ -297,7 +296,7 @@ export default class Viewport implements IViewportManip
         return false;
     }
 
-    onTrigger(event: IViewportTriggerEvent)
+    onTrigger(event: ITriggerEvent)
     {
         if (this.enabled && this._manip) {
             return this._manip.onTrigger(event);

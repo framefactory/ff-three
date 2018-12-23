@@ -11,12 +11,10 @@ import math from "@ff/core/math";
 import threeMath from "./math";
 
 import {
-    EManipPointerEventSource,
-    EManipPointerEventType,
-    EManipTriggerEventType,
+    PointerEventSource,
     IManip,
-    IManipPointerEvent,
-    IManipTriggerEvent
+    IPointerEvent,
+    ITriggerEvent
 } from "@ff/browser/ManipTarget";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +25,7 @@ enum EManipPhase { Off, Active, Release }
 export interface IManipPattern
 {
     mode: EManipMode;
-    source: EManipPointerEventSource;
+    source: PointerEventSource;
     mouseButton?: number;
     touchCount?: number;
     shiftKey?: boolean;
@@ -40,14 +38,14 @@ const _vec3a = new THREE.Vector3();
 const _vec3b = new THREE.Vector3();
 
 const _defaultPattern: IManipPattern[] = [
-    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
-    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Dolly, mouseButton: 0, ctrlKey: true },
-    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Orbit, mouseButton: 0 },
-    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Pan, mouseButton: 2 },
-    { source: EManipPointerEventSource.Mouse, mode: EManipMode.Dolly, mouseButton: 1 },
-    { source: EManipPointerEventSource.Touch, mode: EManipMode.Orbit, touchCount: 1 },
-    { source: EManipPointerEventSource.Touch, mode: EManipMode.PanDolly, touchCount: 2 },
-    { source: EManipPointerEventSource.Touch, mode: EManipMode.Pan, touchCount: 3 },
+    { source: "mouse", mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
+    { source: "mouse", mode: EManipMode.Dolly, mouseButton: 0, ctrlKey: true },
+    { source: "mouse", mode: EManipMode.Orbit, mouseButton: 0 },
+    { source: "mouse", mode: EManipMode.Pan, mouseButton: 2 },
+    { source: "mouse", mode: EManipMode.Dolly, mouseButton: 1 },
+    { source: "touch", mode: EManipMode.Orbit, touchCount: 1 },
+    { source: "touch", mode: EManipMode.PanDolly, touchCount: 2 },
+    { source: "touch", mode: EManipMode.Pan, touchCount: 3 },
 ];
 
 const _limit = (val, min, max) => !isNaN(min) && val < min ? min : (!isNaN(max) && val > max ? max : val);
@@ -86,19 +84,19 @@ export default class ObjectManipulator implements IManip
     {
     }
 
-    onPointer(event: IManipPointerEvent)
+    onPointer(event: IPointerEvent)
     {
         if (event.isPrimary) {
-            if (event.type === EManipPointerEventType.Down) {
+            if (event.type === "pointer-down") {
                 this.phase = EManipPhase.Active;
             }
-            else if (event.type === EManipPointerEventType.Up) {
+            else if (event.type === "pointer-up") {
                 this.phase = EManipPhase.Release;
                 return true;
             }
         }
 
-        if (event.type === EManipPointerEventType.Down) {
+        if (event.type === "pointer-down") {
             this.mode = this.getModeFromEvent(event);
         }
 
@@ -124,9 +122,9 @@ export default class ObjectManipulator implements IManip
         return true;
     }
 
-    onTrigger(event: IManipTriggerEvent)
+    onTrigger(event: ITriggerEvent)
     {
-        if (event.type === EManipTriggerEventType.Wheel) {
+        if (event.type === "wheel") {
             this.deltaWheel += math.limit(event.wheel, -1, 1);
             return true;
         }
@@ -337,9 +335,9 @@ export default class ObjectManipulator implements IManip
         }
     }
 
-    protected getModeFromEvent(event: IManipPointerEvent): EManipMode
+    protected getModeFromEvent(event: IPointerEvent): EManipMode
     {
-        if (event.source === EManipPointerEventSource.Mouse) {
+        if (event.source === "mouse") {
             const button = event.originalEvent.button;
 
             // left button
@@ -369,7 +367,7 @@ export default class ObjectManipulator implements IManip
                 return EManipMode.Dolly;
             }
         }
-        else if (event.source === EManipPointerEventSource.Touch) {
+        else if (event.source === "touch") {
             const count = event.pointerCount;
 
             if (count === 1) {
