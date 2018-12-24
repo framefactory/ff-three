@@ -48,20 +48,17 @@ const _defaultPattern: IManipPattern[] = [
     { source: "touch", mode: EManipMode.Pan, touchCount: 3 },
 ];
 
-const _limit = (val, min, max) => !isNaN(min) && val < min ? min : (!isNaN(max) && val > max ? max : val);
-
-
 export default class ObjectManipulator implements IManip
 {
-    orientation = [ 0, 0, 0 ];
-    offset = [ 0, 0, 50 ];
+    orientation = new THREE.Vector3(0, 0, 0);
+    offset = new THREE.Vector3(0, 0, 50);
     size = 50;
     zoom = 1;
 
-    minOrientation = [ -90, NaN, NaN ];
-    maxOrientation = [ 90, NaN, NaN ];
-    minOffset = [ NaN, NaN, 0.1 ];
-    maxOffset = [ NaN, NaN, 100 ];
+    minOrientation = new THREE.Vector3(-90, -Infinity, -Infinity);
+    maxOrientation = new THREE.Vector3(90, Infinity, Infinity);
+    minOffset = new THREE.Vector3(-Infinity, -Infinity, 0.1);
+    maxOffset = new THREE.Vector3(Infinity, Infinity, 1000);
 
     orientationEnabled = true;
     offsetEnabled = true;
@@ -140,9 +137,8 @@ export default class ObjectManipulator implements IManip
 
     setFromCamera(camera: THREE.Camera)
     {
-        threeMath.decomposeOrbitMatrix(camera.matrix, _vec3a, _vec3b);
-        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
-        _vec3b.toArray(this.offset);
+        threeMath.decomposeOrbitMatrix(camera.matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(threeMath.RAD2DEG);
 
         const cam = camera as any;
 
@@ -153,18 +149,16 @@ export default class ObjectManipulator implements IManip
 
     setFromObject(object: THREE.Object3D)
     {
-        threeMath.decomposeOrbitMatrix(object.matrix, _vec3a, _vec3b);
-        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
-        _vec3b.toArray(this.offset);
+        threeMath.decomposeOrbitMatrix(object.matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(threeMath.RAD2DEG);
 
         this.orthographicMode = false;
     }
 
     setFromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
     {
-        threeMath.decomposeOrbitMatrix(matrix, _vec3a, _vec3b);
-        _vec3a.multiplyScalar(math.RAD2DEG).toArray(this.orientation);
-        _vec3b.toArray(this.offset);
+        threeMath.decomposeOrbitMatrix(matrix, this.orientation, this.offset);
+        this.orientation.multiplyScalar(threeMath.RAD2DEG);
 
         this.orthographicMode = false;
     }
@@ -176,19 +170,24 @@ export default class ObjectManipulator implements IManip
      */
     toCamera(camera: THREE.Camera)
     {
-        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
-        _vec3b.fromArray(this.offset);
+        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.copy(this.offset);
+
+        if (this.orthographicMode) {
+            _vec3b.z = this.maxOffset.z;
+        }
+
         threeMath.composeOrbitMatrix(_vec3a, _vec3b, camera.matrix);
         camera.matrixWorldNeedsUpdate = true;
 
         const cam = camera as any;
         if (cam.isOrthographicCamera) {
             if (cam.isUniversalCamera) {
-                cam.size = this.size;
+                cam.size = this.offset.z;
             }
             else {
                 const aspect = camera.userData["aspect"] || 1;
-                const halfSize = this.size * 0.5;
+                const halfSize = this.offset.z * 0.5;
                 cam.left = -halfSize * aspect;
                 cam.right = halfSize * aspect;
                 cam.bottom = -halfSize;
@@ -204,8 +203,13 @@ export default class ObjectManipulator implements IManip
      */
     toObject(object: THREE.Object3D)
     {
-        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
-        _vec3b.fromArray(this.offset);
+        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.copy(this.offset);
+
+        if (this.orthographicMode) {
+            _vec3b.z = this.maxOffset.z;
+        }
+
         threeMath.composeOrbitMatrix(_vec3a, _vec3b, object.matrix);
         object.matrixWorldNeedsUpdate = true;
     }
@@ -216,8 +220,13 @@ export default class ObjectManipulator implements IManip
      */
     toMatrix(matrix: THREE.Matrix4)
     {
-        _vec3a.fromArray(this.orientation).multiplyScalar(math.DEG2RAD);
-        _vec3b.fromArray(this.offset);
+        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3b.copy(this.offset);
+
+        if (this.orthographicMode) {
+            _vec3b.z = this.maxOffset.z;
+        }
+
         threeMath.composeOrbitMatrix(_vec3a, _vec3b, matrix);
     }
 
@@ -299,39 +308,26 @@ export default class ObjectManipulator implements IManip
         let inverse = this.cameraMode ? -1 : 1;
 
         if (this.orientationEnabled) {
-            orientation[0] += inverse * dPitch * 300 / this.viewportHeight;
-            orientation[1] += inverse * dHead * 300 / this.viewportHeight;
-            orientation[2] += inverse * dRoll * 300 / this.viewportHeight;
+            orientation.x += inverse * dPitch * 300 / this.viewportHeight;
+            orientation.y += inverse * dHead * 300 / this.viewportHeight;
+            orientation.z += inverse * dRoll * 300 / this.viewportHeight;
 
             // check limits
-            orientation[0] = _limit(orientation[0], minOrientation[0], maxOrientation[0]);
-            orientation[1] = _limit(orientation[1], minOrientation[1], maxOrientation[1]);
-            orientation[2] = _limit(orientation[2], minOrientation[2], maxOrientation[2]);
+            orientation.x = math.limit(orientation.x, minOrientation.x, maxOrientation.x);
+            orientation.y = math.limit(orientation.y, minOrientation.y, maxOrientation.y);
+            orientation.z = math.limit(orientation.z, minOrientation.z, maxOrientation.z);
         }
 
         if (this.offsetEnabled) {
-            let factor;
+            const factor = offset.z = dScale * offset.z;
 
-            if (this.orthographicMode) {
-                factor = this.size = dScale * this.size;
-                offset[2] = maxOffset[2];
-            } else {
-                factor = offset[2] = dScale * offset[2];
-            }
-
-            offset[0] += dX * factor * inverse * 2 / this.viewportHeight;
-            offset[1] -= dY * factor * inverse * 2 / this.viewportHeight;
+            offset.x += dX * factor * inverse * 2 / this.viewportHeight;
+            offset.y -= dY * factor * inverse * 2 / this.viewportHeight;
 
             // check limits
-            offset[0] = _limit(offset[0], minOffset[0], maxOffset[0]);
-            offset[1] = _limit(offset[1], minOffset[1], maxOffset[1]);
-
-            if (this.orthographicMode) {
-                this.size = _limit(this.size, minOffset[2], maxOffset[2]);
-            }
-            else {
-                offset[2] = _limit(offset[2], minOffset[2], maxOffset[2]);
-            }
+            offset.x = math.limit(offset.x, minOffset.x, maxOffset.x);
+            offset.y = math.limit(offset.y, minOffset.y, maxOffset.y);
+            offset.z = math.limit(offset.z, minOffset.z, maxOffset.z);
         }
     }
 

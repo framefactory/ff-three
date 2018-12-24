@@ -7,6 +7,10 @@
 
 import * as THREE from "three";
 
+////////////////////////////////////////////////////////////////////////////////
+
+const _VERBOSE = false;
+
 export default class LoadingManager extends THREE.LoadingManager
 {
     constructor()
@@ -21,21 +25,29 @@ export default class LoadingManager extends THREE.LoadingManager
 
     protected onLoadingStart()
     {
-        console.log("Loading files...");
+        if (_VERBOSE) {
+            console.debug("Loading files...");
+        }
     }
 
     protected onLoadingProgress(url, itemsLoaded, itemsTotal)
     {
-        console.log(`Loaded ${itemsLoaded} of ${itemsTotal} files: ${url}`);
+        if (_VERBOSE) {
+            console.debug(`Loaded ${itemsLoaded} of ${itemsTotal} files: ${url}`);
+        }
     }
 
     protected onLoadingCompleted()
     {
-        console.log("Loading completed");
+        if (_VERBOSE) {
+            console.debug("Loading completed");
+        }
     }
 
     protected onLoadingError()
     {
-        console.error(`Loading error`);
+        if (_VERBOSE) {
+            console.error(`Loading error`);
+        }
     }
 }

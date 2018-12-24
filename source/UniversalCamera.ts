@@ -21,7 +21,7 @@ const _cameraOrientation = [
     new THREE.Vector3(0, Math.PI, 0),  // back
 ];
 
-export enum EProjection { Perspective, Orthographic }
+export enum EProjectionType { Perspective, Orthographic }
 export enum EViewPreset { None = -1, Left = 0, Right, Top, Bottom, Front, Back }
 
 export default class UniversalCamera extends THREE.Camera
@@ -47,15 +47,15 @@ export default class UniversalCamera extends THREE.Camera
     // view offset
     view = null;
 
-    constructor(type?: EProjection)
+    constructor(projection?: EProjectionType)
     {
         super();
-        this.setType(type);
+        this.setProjection(projection);
     }
 
-    setType(type: EProjection)
+    setProjection(type: EProjectionType)
     {
-        if (type === EProjection.Orthographic) {
+        if (type === EProjectionType.Orthographic) {
             this.type = "OrthographicCamera";
             this.isPerspectiveCamera = false;
             this.isOrthographicCamera = true;
@@ -69,9 +69,9 @@ export default class UniversalCamera extends THREE.Camera
         this.updateProjectionMatrix();
     }
 
-    getType()
+    getProjection(): EProjectionType
     {
-        return this.isOrthographicCamera ? EProjection.Orthographic : EProjection.Perspective;
+        return this.isOrthographicCamera ? EProjectionType.Orthographic : EProjectionType.Perspective;
     }
 
     setPreset(preset: EViewPreset)
