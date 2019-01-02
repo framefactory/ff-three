@@ -60,7 +60,6 @@ export default class Viewport implements IViewportManip
     private _sceneCamera: THREE.Camera;
     private _vpCamera: UniversalCamera;
     private _manip: ObjectManipulator;
-    private _initManip = false;
 
     constructor(left?: number, top?: number, width?: number, height?: number)
     {
@@ -120,7 +119,7 @@ export default class Viewport implements IViewportManip
         return this._sceneCamera;
     }
 
-    get viewportCamera() {
+    get viewportCamera(): UniversalCamera {
         return this._vpCamera;
     }
 
@@ -176,12 +175,12 @@ export default class Viewport implements IViewportManip
         if (!state && this._manip) {
             this._manip = null;
         }
-        else if (state) {
+        else if (state && this._vpCamera) {
             if (!this._manip) {
                 this._manip = new ObjectManipulator();
                 this._manip.setViewportSize(this.width, this.height);
+                this._manip.setFromCamera(this._vpCamera);
             }
-            this._initManip = true;
         }
 
         return this._manip;
@@ -218,20 +217,19 @@ export default class Viewport implements IViewportManip
 
     updateCamera(sceneCamera?: THREE.Camera): THREE.Camera
     {
-        this._sceneCamera = sceneCamera;
-        const currentCamera: any = this._vpCamera || sceneCamera;
-        if (!currentCamera) {
-            return;
+        let currentCamera: any = sceneCamera;
+
+        if (this._vpCamera) {
+            currentCamera = this._vpCamera;
+
+            if (this._manip) {
+                this._manip.update();
+                this._manip.toCamera(currentCamera);
+            }
         }
 
-        if (this._manip) {
-            if (this._initManip) {
-                this._initManip = false;
-                this._manip.setFromCamera(currentCamera);
-            }
-
-            this._manip.update();
-            this._manip.toCamera(currentCamera);
+        if (!currentCamera) {
+            return;
         }
 
         const absRect = this._absRect;

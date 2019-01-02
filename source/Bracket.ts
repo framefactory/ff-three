@@ -6,8 +6,12 @@
  */
 
 import * as THREE from "three";
+import { computeLocalBoundingBox } from "./helpers";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const _vec3 = new THREE.Vector3();
+const _mat4 = new THREE.Matrix4();
 
 export interface IBracketProps
 {
@@ -32,7 +36,9 @@ export default class Bracket extends THREE.LineSegments
         props = Object.assign({}, Bracket.defaultProps, props);
 
         const box = new THREE.Box3();
-        box.setFromObject(parent);
+        box.makeEmpty();
+
+        computeLocalBoundingBox(parent, box);
 
         const length = props.length;
         const min = [ box.min.x, box.min.y, box.min.z ];
@@ -91,5 +97,41 @@ export default class Bracket extends THREE.LineSegments
         });
 
         super(geometry, material);
+    }
+
+    protected static expandBoundingBox(object: THREE.Object3D, root: THREE.Object3D, box: THREE.Box3)
+    {
+        const geometry = (object as any).geometry;
+        if (geometry !== undefined) {
+
+            let parent = object;
+            _mat4.identity();
+            while(parent && parent !== root) {
+                _mat4.premultiply(parent.matrix);
+                parent = parent.parent;
+            }
+
+            if (geometry.isGeometry) {
+                const vertices = geometry.vertices;
+                for (let i = 0, n = vertices.length; i < n; ++i) {
+                    _vec3.copy(vertices[i]).applyMatrix4(_mat4);
+                    box.expandByPoint(_vec3);
+                }
+            }
+            else if (geometry.isBufferGeometry) {
+                const attribute = geometry.attributes.position;
+                if (attribute !== undefined) {
+                    for (let i = 0, n = attribute.count; i < n; ++i) {
+                        _vec3.fromBufferAttribute(attribute, i).applyMatrix4(_mat4);
+                        box.expandByPoint(_vec3);
+                    }
+                }
+            }
+        }
+
+        const children = object.children;
+        for (let i = 0, n = children.length; i < n; ++i) {
+            Bracket.expandBoundingBox(children[i], root, box);
+        }
     }
 }
