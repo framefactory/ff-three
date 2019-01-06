@@ -31,14 +31,14 @@ export default class Bracket extends THREE.LineSegments
         length: 0.25
     };
 
-    constructor(parent: THREE.Object3D, props?: IBracketProps)
+    constructor(target: THREE.Object3D, props?: IBracketProps)
     {
         props = Object.assign({}, Bracket.defaultProps, props);
 
         const box = new THREE.Box3();
         box.makeEmpty();
 
-        computeLocalBoundingBox(parent, box);
+        computeLocalBoundingBox(target, box);
 
         const length = props.length;
         const min = [ box.min.x, box.min.y, box.min.z ];
@@ -97,6 +97,20 @@ export default class Bracket extends THREE.LineSegments
         });
 
         super(geometry, material);
+
+        this.onBeforeRender = () => {
+            target.updateMatrixWorld(false);
+            this.matrixWorld.copy(target.matrixWorld);
+        }
+    }
+
+    dispose()
+    {
+        if (this.parent) {
+            this.parent.remove(this);
+        }
+
+        this.geometry.dispose();
     }
 
     protected static expandBoundingBox(object: THREE.Object3D, root: THREE.Object3D, box: THREE.Box3)

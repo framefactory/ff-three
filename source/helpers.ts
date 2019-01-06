@@ -61,18 +61,19 @@ export function dispose(object: THREE.Object3D)
  */
 export function computeLocalBoundingBox(object: THREE.Object3D, box: THREE.Box3, root?: THREE.Object3D)
 {
+    if (!root) {
+        root = object;
+    }
+
     const geometry = (object as any).geometry;
     if (geometry !== undefined) {
 
-        if (root === undefined) {
-            root = object;
-        }
-
-        let parent = object;
+        let current = object;
         _mat4.identity();
-        while(parent && parent !== root) {
-            _mat4.premultiply(parent.matrix);
-            parent = parent.parent;
+
+        while(current && current !== root) {
+            _mat4.premultiply(current.matrix);
+            current = current.parent;
         }
 
         if (geometry.isGeometry) {
