@@ -22,6 +22,25 @@ export default class Grid extends THREE.LineSegments
 {
     constructor(props: IGridProps)
     {
+        const geometry = Grid.generate(props);
+        const material = new THREE.LineBasicMaterial({
+            vertexColors: THREE.VertexColors
+        });
+
+        super(geometry, material);
+    }
+
+    update(props: IGridProps)
+    {
+        if (this.geometry) {
+            this.geometry.dispose();
+        }
+
+        this.geometry = Grid.generate(props);
+    }
+
+    protected static generate(props: IGridProps): THREE.BufferGeometry
+    {
         const mainColor = new THREE.Color(props.mainColor as any);
         const subColor = new THREE.Color(props.subColor as any);
 
@@ -48,15 +67,6 @@ export default class Grid extends THREE.LineSegments
         geometry.addAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
         geometry.addAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
-        const material = new THREE.LineBasicMaterial({
-            vertexColors: THREE.VertexColors
-        });
-
-        super(geometry, material);
-    }
-
-    update()
-    {
-
+        return geometry;
     }
 }
