@@ -155,12 +155,13 @@ export default class UniversalCamera extends THREE.Camera
     {
         this.updateMatrixWorld(false);
         _box.copy(boundingBox);
-        _box.applyMatrix4(this.matrixWorldInverse);
+        _mat4a.extractRotation(this.matrixWorldInverse);
+        _box.applyMatrix4(_mat4a);
         _box.getSize(_size);
         _box.getCenter(_center);
 
         const objectSize = Math.max(_size.x / this.aspect, _size.y);
-        _translation.set(_center.x, _center.y, 0);
+        _translation.set(-_center.x, -_center.y, 0);
 
         if (this.isPerspectiveCamera) {
             _translation.z = _size.z / (2 * Math.tan(this.fov * math.DEG2RAD * 0.5));
@@ -168,7 +169,7 @@ export default class UniversalCamera extends THREE.Camera
         else {
             this.size = objectSize * 0.5;
             _translation.z = _size.z * 2;
-            this.far = Math.max(this.far, _translation.z);
+            this.far = Math.max(this.far, _translation.z * 2);
         }
 
         _mat4a.extractRotation(this.matrixWorld);
