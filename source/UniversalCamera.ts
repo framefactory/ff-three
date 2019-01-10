@@ -7,10 +7,17 @@
 
 import * as THREE from "three";
 
+import math from "@ff/core/math";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const _halfPi = Math.PI * 0.5;
-const _vec3 = new THREE.Vector3();
+const _box = new THREE.Box3();
+const _size = new THREE.Vector3();
+const _center = new THREE.Vector3();
+const _translation = new THREE.Vector3();
+const _mat4a = new THREE.Matrix4();
+const _mat4b = new THREE.Matrix4();
 
 const _cameraOrientation = [
     new THREE.Vector3(0, -_halfPi, 0), // left
@@ -137,6 +144,39 @@ export default class UniversalCamera extends THREE.Camera
         }
 
         this.updateProjectionMatrix();
+    }
+
+    zoomToView()
+    {
+        // TODO: Implement
+    }
+
+    moveToView(boundingBox: THREE.Box3)
+    {
+        this.updateMatrixWorld(false);
+        _box.copy(boundingBox);
+        _box.applyMatrix4(this.matrixWorldInverse);
+        _box.getSize(_size);
+        _box.getCenter(_center);
+
+        const objectSize = Math.max(_size.x / this.aspect, _size.y);
+        _translation.set(_center.x, _center.y, 0);
+
+        if (this.isPerspectiveCamera) {
+            _translation.z = _size.z / (2 * Math.tan(this.fov * math.DEG2RAD * 0.5));
+        }
+        else {
+            this.size = objectSize * 0.5;
+            _translation.z = _size.z * 2;
+            this.far = Math.max(this.far, _translation.z);
+        }
+
+        _mat4a.extractRotation(this.matrixWorld);
+        _translation.applyMatrix4(_mat4a);
+
+        this.matrix.decompose(this.position, this.quaternion, this.scale);
+        this.position.copy(_translation);
+        this.updateMatrix();
     }
 
     updateProjectionMatrix()

@@ -93,10 +93,13 @@ export default class Bracket extends THREE.LineSegments
         geometry.addAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
 
         const material = new THREE.LineBasicMaterial({
-            color: props.color
+            color: props.color,
+            depthTest: false
         });
 
         super(geometry, material);
+
+        this.renderOrder = 1;
 
         this.onBeforeRender = () => {
             target.updateMatrixWorld(false);

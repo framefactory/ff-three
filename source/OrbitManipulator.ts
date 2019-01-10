@@ -48,15 +48,15 @@ const _defaultPattern: IManipPattern[] = [
     { source: "touch", mode: EManipMode.Pan, touchCount: 3 },
 ];
 
-export default class ObjectManipulator implements IManip
+export default class OrbitManipulator implements IManip
 {
-    orientation = new THREE.Vector3(0, 0, 0);
+    orbit = new THREE.Vector3(0, 0, 0);
     offset = new THREE.Vector3(0, 0, 50);
     size = 50;
     zoom = 1;
 
-    minOrientation = new THREE.Vector3(-90, -Infinity, -Infinity);
-    maxOrientation = new THREE.Vector3(90, Infinity, Infinity);
+    minOrbit = new THREE.Vector3(-90, -Infinity, -Infinity);
+    maxOrbit = new THREE.Vector3(90, Infinity, Infinity);
     minOffset = new THREE.Vector3(-Infinity, -Infinity, 0.1);
     maxOffset = new THREE.Vector3(Infinity, Infinity, 1000);
 
@@ -77,9 +77,6 @@ export default class ObjectManipulator implements IManip
     protected viewportWidth = 100;
     protected viewportHeight = 100;
 
-    constructor()
-    {
-    }
 
     onPointer(event: IPointerEvent)
     {
@@ -135,42 +132,48 @@ export default class ObjectManipulator implements IManip
         this.viewportHeight = height;
     }
 
-    setFromCamera(camera: THREE.Camera)
+    setFromCamera(camera: THREE.Camera, adaptLimits: boolean = false)
     {
-        threeMath.decomposeOrbitMatrix(camera.matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(threeMath.RAD2DEG);
+        const orbit = this.orbit;
+        const offset = this.offset;
+        threeMath.decomposeOrbitMatrix(camera.matrix, orbit, offset);
+        this.orbit.multiplyScalar(threeMath.RAD2DEG);
 
         const cam = camera as any;
 
         if ((this.orthographicMode = cam.isOrthographicCamera)) {
             this.size = cam.isUniversalCamera ? cam.size : cam.top - cam.bottom;
         }
+        if (adaptLimits) {
+            this.minOffset.min(offset);
+            this.maxOffset.max(offset);
+        }
     }
 
     setFromObject(object: THREE.Object3D)
     {
-        threeMath.decomposeOrbitMatrix(object.matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(threeMath.RAD2DEG);
+        threeMath.decomposeOrbitMatrix(object.matrix, this.orbit, this.offset);
+        this.orbit.multiplyScalar(threeMath.RAD2DEG);
 
         this.orthographicMode = false;
     }
 
     setFromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
     {
-        threeMath.decomposeOrbitMatrix(matrix, this.orientation, this.offset);
-        this.orientation.multiplyScalar(threeMath.RAD2DEG);
+        threeMath.decomposeOrbitMatrix(matrix, this.orbit, this.offset);
+        this.orbit.multiplyScalar(threeMath.RAD2DEG);
 
         this.orthographicMode = false;
     }
 
     /**
-     * Updates the manipulator. If its state has changed, updates the transform matrix of
-     * the given camera. If the camera is orthographic, its size parameter is updated as well.
+     * Updates the matrix of the given camera. If the camera's projection is orthographic,
+     * updates the camera's size parameter as well.
      * @param camera
      */
     toCamera(camera: THREE.Camera)
     {
-        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);
 
         if (this.orthographicMode) {
@@ -198,12 +201,12 @@ export default class ObjectManipulator implements IManip
     }
 
     /**
-     * Sets the given object's matrix from the manipulator's current orientation and offset.
+     * Sets the given object's matrix from the manipulator's current orbit and offset.
      * @param object
      */
     toObject(object: THREE.Object3D)
     {
-        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);
 
         if (this.orthographicMode) {
@@ -215,12 +218,12 @@ export default class ObjectManipulator implements IManip
     }
 
     /**
-     * Sets the given matrix from the manipulator's current orientation and offset.
+     * Sets the given matrix from the manipulator's current orbit and offset.
      * @param matrix
      */
     toMatrix(matrix: THREE.Matrix4)
     {
-        _vec3a.copy(this.orientation).multiplyScalar(math.DEG2RAD);
+        _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);
 
         if (this.orthographicMode) {
@@ -301,21 +304,21 @@ export default class ObjectManipulator implements IManip
     protected updatePose(dX, dY, dScale, dPitch, dHead, dRoll)
     {
         const {
-            orientation, minOrientation, maxOrientation,
+            orbit, minOrbit, maxOrbit,
             offset, minOffset, maxOffset
         } = this;
 
         let inverse = this.cameraMode ? -1 : 1;
 
         if (this.orientationEnabled) {
-            orientation.x += inverse * dPitch * 300 / this.viewportHeight;
-            orientation.y += inverse * dHead * 300 / this.viewportHeight;
-            orientation.z += inverse * dRoll * 300 / this.viewportHeight;
+            orbit.x += inverse * dPitch * 300 / this.viewportHeight;
+            orbit.y += inverse * dHead * 300 / this.viewportHeight;
+            orbit.z += inverse * dRoll * 300 / this.viewportHeight;
 
             // check limits
-            orientation.x = math.limit(orientation.x, minOrientation.x, maxOrientation.x);
-            orientation.y = math.limit(orientation.y, minOrientation.y, maxOrientation.y);
-            orientation.z = math.limit(orientation.z, minOrientation.z, maxOrientation.z);
+            orbit.x = math.limit(orbit.x, minOrbit.x, maxOrbit.x);
+            orbit.y = math.limit(orbit.y, minOrbit.y, maxOrbit.y);
+            orbit.z = math.limit(orbit.z, minOrbit.z, maxOrbit.z);
         }
 
         if (this.offsetEnabled) {

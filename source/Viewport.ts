@@ -18,7 +18,7 @@ import UniversalCamera, {
     EViewPreset
 } from "./UniversalCamera";
 
-import ObjectManipulator from "./ObjectManipulator";
+import OrbitManipulator from "./OrbitManipulator";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +59,7 @@ export default class Viewport implements IViewportManip
 
     private _sceneCamera: THREE.Camera;
     private _vpCamera: UniversalCamera;
-    private _manip: ObjectManipulator;
+    private _manip: OrbitManipulator;
 
     constructor(left?: number, top?: number, width?: number, height?: number)
     {
@@ -170,20 +170,33 @@ export default class Viewport implements IViewportManip
         this._vpCamera = null;
     }
 
-    enableCameraManip(state: boolean): ObjectManipulator
+    enableCameraManip(state: boolean): OrbitManipulator
     {
         if (!state && this._manip) {
             this._manip = null;
         }
         else if (state && this._vpCamera) {
             if (!this._manip) {
-                this._manip = new ObjectManipulator();
+                this._manip = new OrbitManipulator();
                 this._manip.setViewportSize(this.width, this.height);
                 this._manip.setFromCamera(this._vpCamera);
             }
         }
 
         return this._manip;
+    }
+
+    moveCameraToView(box: THREE.Box3)
+    {
+        const camera = this.viewportCamera;
+        const manip = this._manip;
+
+        if (camera) {
+            camera.moveToView(box);
+            if (manip) {
+                manip.setFromCamera(camera, true);
+            }
+        }
     }
 
     isPointInside(x: number, y: number): boolean
