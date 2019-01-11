@@ -66,7 +66,7 @@ export function computeLocalBoundingBox(object: THREE.Object3D, box: THREE.Box3,
     }
 
     const geometry = (object as any).geometry;
-    if (geometry !== undefined) {
+    if (geometry && object.visible) {
 
         let current = object;
         _mat4.identity();
