@@ -7,7 +7,9 @@
 
 import * as THREE from "three";
 
+import Publisher, { ITypedEvent } from "@ff/core/Publisher";
 import math from "@ff/core/math";
+
 import threeMath from "./math";
 
 import {
@@ -17,7 +19,12 @@ import {
     ITriggerEvent
 } from "@ff/browser/ManipTarget";
 
+import UniversalCamera, { EProjection } from "./UniversalCamera";
+
 ////////////////////////////////////////////////////////////////////////////////
+
+export { EProjection };
+export enum EViewPreset { Left, Right, Top, Bottom, Front, Back, None }
 
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
@@ -48,7 +55,7 @@ const _defaultPattern: IManipPattern[] = [
     { source: "touch", mode: EManipMode.Pan, touchCount: 3 },
 ];
 
-export default class OrbitManipulator implements IManip
+export default class OrbitManipulator extends Publisher implements IManip
 {
     orbit = new THREE.Vector3(0, 0, 0);
     offset = new THREE.Vector3(0, 0, 50);
@@ -77,6 +84,11 @@ export default class OrbitManipulator implements IManip
     protected viewportWidth = 100;
     protected viewportHeight = 100;
 
+    constructor()
+    {
+        super();
+        this.addEvent("changed");
+    }
 
     onPointer(event: IPointerEvent)
     {

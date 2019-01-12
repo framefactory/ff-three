@@ -8,7 +8,8 @@
         "baseUrl": "..",
         "paths": {
             "@ff/core/*": [ "./ff-core/source/*" ],
-            "@ff/browser/*": [ "./ff-browser/source/*" ]
+            "@ff/browser/*": [ "./ff-browser/source/*" ],
+            "@ff/ui/*": [ "./ff-ui/source/*" ]
         }
     }
 }

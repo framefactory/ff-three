@@ -14,7 +14,7 @@ import {
 } from "@ff/browser/ManipTarget";
 
 import UniversalCamera, {
-    EProjectionType,
+    EProjection,
     EViewPreset
 } from "./UniversalCamera";
 
@@ -150,7 +150,7 @@ export default class Viewport implements IViewportManip
         }
     }
 
-    setBuiltInCamera(type: EProjectionType, preset?: EViewPreset)
+    setBuiltInCamera(type: EProjection, preset?: EViewPreset)
     {
         if (!this._vpCamera) {
             this._vpCamera = new UniversalCamera(type);
