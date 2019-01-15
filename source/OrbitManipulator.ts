@@ -7,21 +7,22 @@
 
 import * as THREE from "three";
 
-import Publisher, { ITypedEvent } from "@ff/core/Publisher";
 import math from "@ff/core/math";
 
 import threeMath from "./math";
 
 import {
-    PointerEventSource,
     IManip,
     IPointerEvent,
     ITriggerEvent
 } from "@ff/browser/ManipTarget";
 
-import UniversalCamera, { EProjection } from "./UniversalCamera";
+import { EProjection } from "./UniversalCamera";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const _vec3a = new THREE.Vector3();
+const _vec3b = new THREE.Vector3();
 
 export { EProjection };
 export enum EViewPreset { Left, Right, Top, Bottom, Front, Back, None }
@@ -29,33 +30,8 @@ export enum EViewPreset { Left, Right, Top, Bottom, Front, Back, None }
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
 
-export interface IManipPattern
-{
-    mode: EManipMode;
-    source: PointerEventSource;
-    mouseButton?: number;
-    touchCount?: number;
-    shiftKey?: boolean;
-    ctrlKey?: boolean;
-    altKey?: boolean;
-    metaKey?: boolean;
-}
 
-const _vec3a = new THREE.Vector3();
-const _vec3b = new THREE.Vector3();
-
-const _defaultPattern: IManipPattern[] = [
-    { source: "mouse", mode: EManipMode.Pan, mouseButton: 0, shiftKey: true },
-    { source: "mouse", mode: EManipMode.Dolly, mouseButton: 0, ctrlKey: true },
-    { source: "mouse", mode: EManipMode.Orbit, mouseButton: 0 },
-    { source: "mouse", mode: EManipMode.Pan, mouseButton: 2 },
-    { source: "mouse", mode: EManipMode.Dolly, mouseButton: 1 },
-    { source: "touch", mode: EManipMode.Orbit, touchCount: 1 },
-    { source: "touch", mode: EManipMode.PanDolly, touchCount: 2 },
-    { source: "touch", mode: EManipMode.Pan, touchCount: 3 },
-];
-
-export default class OrbitManipulator extends Publisher implements IManip
+export default class OrbitManipulator implements IManip
 {
     orbit = new THREE.Vector3(0, 0, 0);
     offset = new THREE.Vector3(0, 0, 50);
@@ -86,8 +62,6 @@ export default class OrbitManipulator extends Publisher implements IManip
 
     constructor()
     {
-        super();
-        this.addEvent("changed");
     }
 
     onPointer(event: IPointerEvent)

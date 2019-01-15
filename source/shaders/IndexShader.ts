@@ -22,6 +22,7 @@ export default class IndexShader extends THREE.ShaderMaterial
     }
 
     isIndexShader = true;
+    uniformsNeedUpdate = false;
 
     lights = false;
 
@@ -35,6 +36,8 @@ export default class IndexShader extends THREE.ShaderMaterial
         value[0] = lb / 255;
         value[1] = mb / 255;
         value[2] = hb / 255;
+
+        this.uniformsNeedUpdate = true;
     }
 
     uniforms = {

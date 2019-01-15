@@ -41,7 +41,16 @@ export default class GPUPicker
         this.indexShader = new IndexShader();
         this.positionShader = new PositionShader();
         this.normalShader = new NormalShader();
+    }
 
+    pickObject(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): THREE.Object3D
+    {
+        const index = this.pickIndex(scene, camera, event);
+        if (index > 0) {
+            return scene.getObjectById(index);
+        }
+
+        return undefined;
     }
 
     pickIndex(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): number
@@ -66,6 +75,7 @@ export default class GPUPicker
 
         const buffer = this.pickBuffer;
         renderer.readRenderTargetPixels(pickTexture, 0, 0, 1, 1, buffer);
+
         return buffer[0] + buffer[1] * 256 + buffer[2] * 65536;
     }
 
