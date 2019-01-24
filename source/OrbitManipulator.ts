@@ -259,6 +259,8 @@ export default class OrbitManipulator implements IManip
             }
             return true;
         }
+
+        return false;
     }
 
     protected updateByMode()
