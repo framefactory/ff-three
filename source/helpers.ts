@@ -12,7 +12,7 @@ import * as THREE from "three";
 const _vec3 = new THREE.Vector3();
 const _mat4 = new THREE.Matrix4();
 
-export function dispose(object: THREE.Object3D)
+export function disposeObject(object: THREE.Object3D)
 {
     const geometries = new Map<string, THREE.BufferGeometry>();
     const materials = new Map<string, THREE.Material>();
@@ -30,7 +30,7 @@ export function dispose(object: THREE.Object3D)
                 materials.set(material.uuid, material);
                 for (let key in material) {
                     const texture = material[key] as any; // THREE.Texture;
-                    if (texture.isTexture) {
+                    if (texture && texture.isTexture) {
                         textures.set(texture.uuid, texture);
                     }
                 }
