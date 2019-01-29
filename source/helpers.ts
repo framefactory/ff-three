@@ -11,6 +11,32 @@ import * as THREE from "three";
 
 const _vec3 = new THREE.Vector3();
 const _mat4 = new THREE.Matrix4();
+const _euler = new THREE.Euler();
+const _quat = new THREE.Quaternion();
+
+export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
+
+export function degreesToQuaternion(rotation: number[], order: RotationOrder, quaternion?: THREE.Quaternion): THREE.Quaternion
+{
+    const result = quaternion || new THREE.Quaternion();
+
+    _vec3.fromArray(rotation).multiplyScalar(THREE.Math.DEG2RAD);
+    _euler.setFromVector3(_vec3, order);
+    result.setFromEuler(_euler, false);
+
+    return result;
+}
+
+export function quaternionToDegrees(quaternion: THREE.Quaternion, order: string, rotation?: number[]): number[]
+{
+    const result = rotation || [ 0, 0, 0 ];
+
+    _euler.setFromQuaternion(quaternion, order, false);
+    _euler.toVector3(_vec3);
+    _vec3.multiplyScalar(THREE.Math.RAD2DEG).toArray(result);
+
+    return result;
+}
 
 export function disposeObject(object: THREE.Object3D)
 {
