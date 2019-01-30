@@ -7,6 +7,8 @@
 
 import * as THREE from "three";
 
+import Publisher, { ITypedEvent } from "@ff/core/Publisher";
+
 import {
     IBaseEvent as IManipBaseEvent,
     IPointerEvent as IManipPointerEvent,
@@ -46,10 +48,14 @@ export interface IViewportRect
     height: number;
 }
 
-export default class Viewport implements IViewportManip
+export interface IViewportDisposeEvent extends ITypedEvent<"dispose">
+{
+    viewport: Viewport;
+}
+
+export default class Viewport extends Publisher implements IViewportManip
 {
     next: IViewportManip = null;
-    enabled: boolean = true;
 
     private _relRect: IViewportRect;
     private _absRect: IViewportRect;
@@ -63,6 +69,9 @@ export default class Viewport implements IViewportManip
 
     constructor(left?: number, top?: number, width?: number, height?: number)
     {
+        super();
+        this.addEvent("dispose");
+
         this.next = null;
 
         this._relRect = {
@@ -125,6 +134,12 @@ export default class Viewport implements IViewportManip
 
     get manip() {
         return this._manip;
+    }
+
+    dispose()
+    {
+        console.log("Viewport.dispose - " + this.toString());
+        this.emit<IViewportDisposeEvent>({ type: "dispose", viewport: this });
     }
 
     setSize(left?: number, top?: number, width?: number, height?: number)
@@ -295,12 +310,12 @@ export default class Viewport implements IViewportManip
 
     isInside(event: IBaseEvent): boolean
     {
-        return this.enabled && this.isPointInside(event.localX, event.localY);
+        return this.isPointInside(event.localX, event.localY);
     }
 
     onPointer(event: IPointerEvent)
     {
-        if (this.enabled && this._manip) {
+        if (this._manip) {
             return this._manip.onPointer(event);
         }
 
@@ -309,11 +324,16 @@ export default class Viewport implements IViewportManip
 
     onTrigger(event: ITriggerEvent)
     {
-        if (this.enabled && this._manip) {
+        if (this._manip) {
             return this._manip.onTrigger(event);
         }
 
         return false;
+    }
+
+    toString()
+    {
+        return `Viewport (left: ${this.left}, top: ${this.top}, width: ${this.width}, height: ${this.height})`;
     }
 
     protected updateViewport()
