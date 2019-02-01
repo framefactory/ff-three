@@ -53,6 +53,15 @@ export interface IViewportDisposeEvent extends ITypedEvent<"dispose">
     viewport: Viewport;
 }
 
+export interface IViewportProps
+{
+    left?: number;
+    top?: number;
+    width?: number;
+    height?: number;
+    overlay?: HTMLElement;
+}
+
 export default class Viewport extends Publisher implements IViewportManip
 {
     next: IViewportManip = null;
@@ -60,25 +69,27 @@ export default class Viewport extends Publisher implements IViewportManip
     private _relRect: IViewportRect;
     private _absRect: IViewportRect;
 
-    private _canvasWidth: number;
-    private _canvasHeight: number;
+    private _canvasWidth = 1;
+    private _canvasHeight = 1;
 
-    private _sceneCamera: THREE.Camera;
-    private _vpCamera: UniversalCamera;
-    private _manip: OrbitManipulator;
+    private _overlay: HTMLElement = null;
+    private _camera: UniversalCamera = null;
+    private _manip: OrbitManipulator = null;
 
-    constructor(left?: number, top?: number, width?: number, height?: number)
+    constructor(props?: IViewportProps)
     {
         super();
         this.addEvent("dispose");
 
         this.next = null;
 
+        props = props || {};
+
         this._relRect = {
-            left: left || 0,
-            top: top || 0,
-            width: width || 1,
-            height: height || 1
+            left: props.left || 0,
+            top: props.top || 0,
+            width: props.width || 1,
+            height: props.height || 1
         };
 
         this._absRect = {
@@ -88,12 +99,9 @@ export default class Viewport extends Publisher implements IViewportManip
             height: 1
         };
 
-        this._canvasWidth = 1;
-        this._canvasHeight = 1;
-
-        this._sceneCamera = null;
-        this._vpCamera = null;
-        this._manip = null;
+        if (props.overlay) {
+            this.overlay = props.overlay;
+        }
     }
 
     get left() {
@@ -121,25 +129,34 @@ export default class Viewport extends Publisher implements IViewportManip
     }
 
     get camera() {
-        return this._vpCamera || this._sceneCamera;
-    }
-
-    get sceneCamera() {
-        return this._sceneCamera;
-    }
-
-    get viewportCamera(): UniversalCamera {
-        return this._vpCamera;
+        return this._camera;
     }
 
     get manip() {
         return this._manip;
     }
 
+    get overlay() {
+        return this._overlay;
+    }
+    set overlay(overlay: HTMLElement) {
+        this._overlay = overlay;
+        if (overlay) {
+            overlay.style.position = "absolute";
+            overlay.style.overflow = "hidden";
+            this.updateGeometry();
+        }
+    }
+
     dispose()
     {
         console.log("Viewport.dispose - " + this.toString());
         this.emit<IViewportDisposeEvent>({ type: "dispose", viewport: this });
+
+        if (this._overlay) {
+            this._overlay.remove();
+            this._overlay = null;
+        }
     }
 
     setSize(left?: number, top?: number, width?: number, height?: number)
@@ -150,7 +167,7 @@ export default class Viewport extends Publisher implements IViewportManip
         relRect.width = width;
         relRect.height = height;
 
-        this.updateViewport();
+        this.updateGeometry();
     }
 
     setCanvasSize(width: number, height: number)
@@ -158,7 +175,7 @@ export default class Viewport extends Publisher implements IViewportManip
         this._canvasWidth = width;
         this._canvasHeight = height;
 
-        this.updateViewport();
+        this.updateGeometry();
 
         if (this._manip) {
             this._manip.setViewportSize(width, height);
@@ -167,22 +184,22 @@ export default class Viewport extends Publisher implements IViewportManip
 
     setBuiltInCamera(type: EProjection, preset?: EViewPreset)
     {
-        if (!this._vpCamera) {
-            this._vpCamera = new UniversalCamera(type);
-            this._vpCamera.matrixAutoUpdate = false;
+        if (!this._camera) {
+            this._camera = new UniversalCamera(type);
+            this._camera.matrixAutoUpdate = false;
         }
         else {
-            this._vpCamera.setProjection(type);
+            this._camera.setProjection(type);
         }
 
         if (preset !== undefined) {
-            this._vpCamera.setPreset(preset);
+            this._camera.setPreset(preset);
         }
     }
 
     unsetBuiltInCamera()
     {
-        this._vpCamera = null;
+        this._camera = null;
     }
 
     enableCameraManip(state: boolean): OrbitManipulator
@@ -190,11 +207,11 @@ export default class Viewport extends Publisher implements IViewportManip
         if (!state && this._manip) {
             this._manip = null;
         }
-        else if (state && this._vpCamera) {
+        else if (state && this._camera) {
             if (!this._manip) {
                 this._manip = new OrbitManipulator();
                 this._manip.setViewportSize(this.width, this.height);
-                this._manip.setFromCamera(this._vpCamera);
+                this._manip.setFromCamera(this._camera);
             }
         }
 
@@ -203,7 +220,7 @@ export default class Viewport extends Publisher implements IViewportManip
 
     moveCameraToView(box: THREE.Box3)
     {
-        const camera = this.viewportCamera;
+        const camera = this._camera;
         const manip = this._manip;
 
         if (camera) {
@@ -247,8 +264,8 @@ export default class Viewport extends Publisher implements IViewportManip
     {
         let currentCamera: any = sceneCamera;
 
-        if (this._vpCamera) {
-            currentCamera = this._vpCamera;
+        if (this._camera) {
+            currentCamera = this._camera;
 
             if (this._manip) {
                 this._manip.update();
@@ -336,7 +353,7 @@ export default class Viewport extends Publisher implements IViewportManip
         return `Viewport (left: ${this.left}, top: ${this.top}, width: ${this.width}, height: ${this.height})`;
     }
 
-    protected updateViewport()
+    protected updateGeometry()
     {
         const relRect = this._relRect;
         const absRect = this._absRect;
@@ -347,5 +364,13 @@ export default class Viewport extends Publisher implements IViewportManip
         absRect.top = Math.round(relRect.top * canvasHeight);
         absRect.width = Math.round(relRect.width * canvasWidth);
         absRect.height = Math.round(relRect.height * canvasHeight);
+
+        const overlay = this._overlay;
+        if (overlay) {
+            overlay.style.left = (absRect.left ? absRect.left.toFixed() + "px" : "0");
+            overlay.style.top = (absRect.top ? absRect.top.toFixed() + "px" : "0");
+            overlay.style.width = absRect.width.toFixed() + "px";
+            overlay.style.height = absRect.height.toFixed() + "px";
+        }
     }
 }

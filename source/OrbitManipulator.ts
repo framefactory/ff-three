@@ -17,15 +17,10 @@ import {
     ITriggerEvent
 } from "@ff/browser/ManipTarget";
 
-import { EProjection } from "./UniversalCamera";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const _vec3a = new THREE.Vector3();
 const _vec3b = new THREE.Vector3();
-
-export { EProjection };
-export enum EViewPreset { Left, Right, Top, Bottom, Front, Back, None }
 
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
@@ -150,6 +145,24 @@ export default class OrbitManipulator implements IManip
         this.orbit.multiplyScalar(threeMath.RAD2DEG);
 
         this.orthographicMode = false;
+    }
+
+    zoomExtent(box: THREE.Box3, fovY: number = 52)
+    {
+        box.getSize(_vec3a);
+        box.getCenter(_vec3b);
+
+        const extent = Math.max(_vec3a.x, _vec3a.y, _vec3a.z);
+
+        if (this.orthographicMode) {
+            this.offset.z = extent * 1.5;
+            this.maxOffset.z = extent * 2;
+        }
+        else {
+            this.offset.z = 0.75 * extent + 0.75 * extent / (2 * Math.tan(fovY * math.DEG2RAD * 0.5));
+            this.maxOffset.z = this.offset.z * 3;
+        }
+
     }
 
     /**

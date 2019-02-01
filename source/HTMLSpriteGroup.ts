@@ -14,18 +14,14 @@ import HTMLSprite from "./HTMLSprite";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IHTMLViewportEntry
-{
-    container: HTMLElement;
-    elements: Dictionary<HTMLElement>;
-}
+export { HTMLSprite };
+
 
 export default class HTMLSpriteGroup extends THREE.Object3D
 {
     readonly isHTMLSpriteGroup = true;
 
-    protected viewports = new Map<Viewport, IHTMLViewportEntry>();
-
+    protected viewports = new Map<Viewport, Dictionary<HTMLElement>>();
 
     dispose()
     {
@@ -41,29 +37,44 @@ export default class HTMLSpriteGroup extends THREE.Object3D
         })
     }
 
-    renderHTML(viewport: Viewport, container: HTMLElement)
+    render(viewport: Viewport, camera: THREE.Camera)
     {
-        const entry = this.viewports.get(viewport);
-        const elements = entry ? entry.elements : this.registerViewport(viewport, container);
+        if (!viewport.overlay) {
+            console.warn("viewport missing overlay element");
+            return;
+        }
+
+        const elements = this.viewports.get(viewport) || this.registerViewport(viewport);
         const children = this.children;
 
         for (let i = 0, n = children.length; i < n; ++i) {
             const sprite = children[i] as HTMLSprite;
             const element = elements[sprite.uuid];
             if (element) {
-                sprite.updateHTML(elements[sprite.uuid], viewport);
+                sprite.renderHTMLElement(elements[sprite.uuid], viewport, camera);
             }
         }
     }
 
+    update(sprite: HTMLSprite)
+    {
+        sprite.update();
+
+        this.viewports.forEach((elements, viewport) => {
+            const element = elements[sprite.uuid];
+            if (element) {
+                sprite.updateHTMLElement(element, viewport);
+            }
+        });
+    }
+
     add(sprite: HTMLSprite)
     {
-        this.viewports.forEach((entry, viewport) => {
-            const { container, elements } = entry;
-            const element = sprite.createHTML();
+        this.viewports.forEach((elements, viewport) => {
+            const element = sprite.createHTMLElement();
             if (element) {
                 elements[sprite.uuid] = element;
-                container.appendChild(element);
+                viewport.overlay.appendChild(element);
             }
         });
 
@@ -72,27 +83,29 @@ export default class HTMLSpriteGroup extends THREE.Object3D
 
     remove(sprite: HTMLSprite)
     {
-        this.viewports.forEach((entry, viewport) => {
-            const { container, elements } = entry;
+        this.viewports.forEach((elements, viewport) => {
             const element = elements[sprite.uuid];
-            container.removeChild(element);
-            elements[sprite.uuid] = undefined;
+            if (element) {
+                viewport.overlay.removeChild(element);
+                elements[sprite.uuid] = undefined;
+            }
         });
 
         return super.remove(sprite);
     }
 
-    protected registerViewport(viewport: Viewport, container: HTMLElement)
+    protected registerViewport(viewport: Viewport): Dictionary<HTMLElement>
     {
+        const overlay = viewport.overlay;
         const elements = {};
-        this.viewports.set(viewport, { container, elements });
+        this.viewports.set(viewport, elements);
 
         this.children.forEach((sprite: HTMLSprite) => {
             if (sprite.isHTMLSprite) {
-                const element = sprite.createHTML();
+                const element = sprite.createHTMLElement();
                 if (element) {
                     elements[sprite.uuid] = element;
-                    container.appendChild(element);
+                    overlay.appendChild(element);
                 }
             }
         });
@@ -104,12 +117,13 @@ export default class HTMLSpriteGroup extends THREE.Object3D
 
     protected onViewportDispose(event: IViewportDisposeEvent)
     {
-        const { container, elements }  = this.viewports.get(event.viewport);
+        const overlay = event.viewport.overlay;
+        const elements  = this.viewports.get(event.viewport);
         const children = this.children;
 
         for (let i = 0, n = children.length; i < n; ++i) {
             const sprite = children[i] as HTMLSprite;
-            container.removeChild(elements[sprite.uuid]);
+            overlay.removeChild(elements[sprite.uuid]);
         }
 
         this.viewports.delete(event.viewport);

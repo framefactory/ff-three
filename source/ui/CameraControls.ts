@@ -12,9 +12,12 @@ import { IButtonClickEvent } from "@ff/ui/Button";
 import "./ViewCube";
 import { IViewCubeSelectEvent } from "./ViewCube";
 
-import OrbitManipulator, { EProjection, EViewPreset } from "../OrbitManipulator";
+import { EProjection } from "../UniversalCamera";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export { EProjection };
+export enum EViewPreset { Left, Right, Top, Bottom, Front, Back, None }
 
 /**
  * Emitted by [[CameraControl]] after the user selects a projection option.

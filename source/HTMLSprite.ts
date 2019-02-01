@@ -7,6 +7,7 @@
 
 import * as THREE from "three";
 
+import { html } from "@ff/ui/CustomElement";
 import Viewport from "./Viewport";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,10 +19,12 @@ const _vec3d = new THREE.Vector3();
 const _vec2a = new THREE.Vector2();
 const _vec2b = new THREE.Vector2();
 
+export { Viewport, html };
+
 export enum EQuadrant { TopRight, TopLeft, BottomLeft, BottomRight }
 
 
-export default class HTMLSprite extends THREE.Object3D
+export default class HTMLSprite extends THREE.Mesh
 {
     readonly isHTMLSprite = true;
 
@@ -29,15 +32,21 @@ export default class HTMLSprite extends THREE.Object3D
     orientationAngle = 0;
     orientationQuadrant: EQuadrant = EQuadrant.TopLeft;
 
-    createHTML(): HTMLElement
+    constructor()
     {
-        const element = document.createElement("div");
-        element.innerText = "HTML Sprite";
-        element.classList.add("ff-html-sprite");
-        return element;
+        super();
+        this.frustumCulled = false;
     }
 
-    updateHTML(element: HTMLElement, viewport: Viewport)
+    update()
+    {
+    }
+
+    updateHTMLElement(element: HTMLElement, viewport: Viewport)
+    {
+    }
+
+    renderHTMLElement(element: HTMLElement, viewport: Viewport, camera: THREE.Camera)
     {
         _vec3a.set(0, 0, 0);
         _vec3a.applyMatrix4(this.modelViewMatrix);
@@ -50,7 +59,6 @@ export default class HTMLSprite extends THREE.Object3D
 
         this.viewAngle = _vec3c.angleTo(_vec3d);
 
-        const camera = viewport.camera;
         _vec3a.applyMatrix4(camera.projectionMatrix);
         _vec3b.applyMatrix4(camera.projectionMatrix);
 
@@ -58,13 +66,21 @@ export default class HTMLSprite extends THREE.Object3D
         _vec2a.set(_vec3a.x, _vec3a.y);
         _vec2b.sub(_vec2a);
 
-        const x = viewport.left + (_vec3b.x + 1) * 0.5 * viewport.width;
-        const y = viewport.top + (1 - _vec3b.y) * 0.5 * viewport.height;
+        const x = (_vec3b.x + 1) * 0.5 * viewport.width;
+        const y = (1 - _vec3b.y) * 0.5 * viewport.height;
 
         element.style.left = x.toString() + "px";
         element.style.top = y.toString() + "px";
 
         const angle = this.orientationAngle = _vec2b.angle();
         this.orientationQuadrant = Math.floor(2 * angle / Math.PI);
+    }
+
+    createHTMLElement(): HTMLElement
+    {
+        const element = document.createElement("div");
+        element.innerText = "HTML Sprite";
+        element.classList.add("ff-html-sprite");
+        return element;
     }
 }

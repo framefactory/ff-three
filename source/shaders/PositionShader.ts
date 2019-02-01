@@ -15,7 +15,7 @@ export default class PositionShader extends THREE.ShaderMaterial
 
     uniforms = {
         index: { value: 0 },
-        range: { value: [ -1, 1 ]}
+        range: { value: [ -1, 1 ] }
     };
 
     vertexShader = [
@@ -30,7 +30,7 @@ export default class PositionShader extends THREE.ShaderMaterial
 
     fragmentShader = [
         "uniform float index;",
-        "uniform float range;",
+        "uniform vec2 range;",
         "varying vec3 vLocalPosition;",
 
         "vec4 toVec4(float v) {",
@@ -45,6 +45,6 @@ export default class PositionShader extends THREE.ShaderMaterial
         "void main() {",
         "  gl_FragColor = (index == 0.0 ? toVec4(vLocalPosition.x)",
         "    : (index == 1.0 ? toVec4(vLocalPosition.y) : toVec4(vLocalPosition.z)));",
-        "  }"
+        "}"
     ].join("\n");
 }

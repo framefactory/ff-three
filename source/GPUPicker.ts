@@ -17,6 +17,13 @@ import { IBaseEvent } from "./Viewport";
 
 const _vec3 = new THREE.Vector3();
 
+const _range = 100000;
+
+const _pickPositionRange = new THREE.Box3(
+    new THREE.Vector3(-_range, -_range, -_range),
+    new THREE.Vector3(_range, _range, _range)
+);
+
 export default class GPUPicker
 {
     protected renderer: THREE.WebGLRenderer;
@@ -80,8 +87,11 @@ export default class GPUPicker
     }
 
     pickPosition(scene: THREE.Scene, camera: THREE.Camera,
-        boundingBox: THREE.Box3, event: IBaseEvent): THREE.Vector3
+        event: IBaseEvent, range?: THREE.Box3, result?: THREE.Vector3): THREE.Vector3
     {
+        range = range || _pickPositionRange;
+        result = result || new THREE.Vector3();
+
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
 
@@ -95,8 +105,8 @@ export default class GPUPicker
 
         for (let i = 0; i < 3; ++i) {
             shader.uniforms.index.value = i;
-            shader.uniforms.range.value[0] = boundingBox.min.getComponent(i);
-            shader.uniforms.range.value[1] = boundingBox.max.getComponent(i);
+            shader.uniforms.range.value[0] = range.min.getComponent(i);
+            shader.uniforms.range.value[1] = range.max.getComponent(i);
             viewport.applyPickViewport(pickTextures[i], event);
             renderer.render(scene, camera, pickTextures[i], true);
         }
@@ -106,22 +116,24 @@ export default class GPUPicker
         scene.overrideMaterial = overrideMaterial;
 
         const buffer = this.pickBuffer;
-        const position = new THREE.Vector3();
 
         for (let i = 0; i < 3; ++i) {
             renderer.readRenderTargetPixels(pickTextures[i], 0, 0, 1, 1, buffer);
-            position[i] = buffer[0] / 255
+            result.setComponent(i, buffer[0] / 255
                 + buffer[1] / 255 / 256
                 + buffer[2] / 255 / 65536
-                + buffer[3] / 255 / 16777216;
+                + buffer[3] / 255 / 16777216);
         }
 
-        boundingBox.getSize(_vec3);
-        return position.multiply(_vec3).add(boundingBox.min);
+        range.getSize(_vec3);
+        return result.multiply(_vec3).add(range.min);
     }
 
-    pickNormal(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): THREE.Vector3
+    pickNormal(scene: THREE.Scene, camera: THREE.Camera,
+            event: IBaseEvent, result?: THREE.Vector3): THREE.Vector3
     {
+        result = result || new THREE.Vector3();
+
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
 
@@ -141,8 +153,9 @@ export default class GPUPicker
         scene.overrideMaterial = overrideMaterial;
 
         const buffer = this.pickBuffer;
+
         renderer.readRenderTargetPixels(pickTexture, 0, 0, 1, 1, buffer);
-        return new THREE.Vector3(
+        return result.set(
             buffer[0] / 255 * 2 - 1,
             buffer[1] / 255 * 2 - 1,
             buffer[2] / 255 * 2 - 1
