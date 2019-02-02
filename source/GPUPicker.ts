@@ -26,6 +26,44 @@ const _pickPositionRange = new THREE.Box3(
 
 export default class GPUPicker
 {
+    static add(object: THREE.Object3D, recursive: boolean)
+    {
+        const hookObject3D = object => {
+            if ((object as any).material) {
+                object.onBeforeRender = function(r, s, c, g, material: IndexShader) {
+                    if (material.isIndexShader) {
+                        //console.log("setIndex #%s for %s", object.id, object);
+                        material.setIndex(object.id);
+                    }
+                }
+            }
+        };
+
+        if (recursive) {
+            object.traverse(object => hookObject3D(object));
+        }
+        else {
+            hookObject3D(object);
+        }
+    }
+
+    static remove(object: THREE.Object3D, recursive: boolean)
+    {
+        const unhookObject3D = object => {
+            if ((object as any).material) {
+                object.onBeforeRender = null;
+            }
+        };
+
+        if (recursive) {
+            object.traverse(object => unhookObject3D(object));
+        }
+        else {
+            unhookObject3D(object);
+        }
+    }
+
+
     protected renderer: THREE.WebGLRenderer;
 
     protected pickTextures: THREE.WebGLRenderTarget[];
