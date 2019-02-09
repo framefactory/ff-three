@@ -9,6 +9,9 @@ import * as THREE from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders the local position, requires one pass per component (x, y, z).
+ */
 export default class PositionShader extends THREE.ShaderMaterial
 {
     isPositionShader = true;
