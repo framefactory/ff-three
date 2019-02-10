@@ -194,6 +194,11 @@ export default class Viewport extends Publisher implements IViewportManip
 
         if (preset !== undefined) {
             this._camera.setPreset(preset);
+
+            const textElement = document.createElement("div");
+            textElement.classList.add("ff-viewport-text");
+            textElement.innerText = EViewPreset[preset];
+            this._overlay.appendChild(textElement);
         }
     }
 
