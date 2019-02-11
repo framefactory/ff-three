@@ -94,15 +94,22 @@ export default class HTMLSprite extends THREE.Object3D
      * @param anchor
      * @param camera
      */
-    renderHTMLElement(container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D): HTMLElement
+    renderHTMLElement(container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D): HTMLElement | null
     {
         anchor = anchor || this;
 
         let element = this._elements.get(container);
+
         if (!element) {
             element = this.createHTMLElement();
-            container.appendChild(element);
-            this._elements.set(container, element);
+            if (element) {
+                container.appendChild(element);
+                this._elements.set(container, element);
+            }
+        }
+
+        if (!element) {
+            return null;
         }
 
         _vec3a.set(0, 0, 0);
@@ -141,11 +148,7 @@ export default class HTMLSprite extends THREE.Object3D
      */
     protected createHTMLElement(): HTMLElement
     {
-        const element = document.createElement("div");
-        element.innerText = "HTML Sprite";
-        element.classList.add("ff-html-sprite");
-
-        return element;
+        return null;
     }
 
     /**
@@ -167,5 +170,4 @@ export default class HTMLSprite extends THREE.Object3D
     {
         element.style.display = visible ? "block" : "none";
     }
-
 }
