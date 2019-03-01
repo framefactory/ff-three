@@ -9,8 +9,8 @@ import * as THREE from "three";
 
 import { Dictionary } from "@ff/core/types";
 
-import * as fragmentShader from "!raw-loader!./shaders/floorPhongShader.frag";
-import * as vertexShader from "!raw-loader!./shaders/floorPhongShader.vert";
+const fragmentShader = require("./shaders/floorPhongShader.frag");
+const vertexShader = require("./shaders/floorPhongShader.vert");
 
 ////////////////////////////////////////////////////////////////////////////////
 
