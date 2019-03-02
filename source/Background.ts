@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export enum EBackgroundMode { Solid, LinearGradient, RadialGradient }
+export enum EBackgroundStyle { Solid, LinearGradient, RadialGradient }
 
 export default class Background extends THREE.Mesh
 {
@@ -59,11 +59,11 @@ export class BackgroundGeometry extends THREE.BufferGeometry
 
 export class BackgroundMaterial extends THREE.RawShaderMaterial
 {
-    set mode(mode: EBackgroundMode) {
-        this.uniforms.mode.value = mode;
+    set style(style: EBackgroundStyle) {
+        this.uniforms.style.value = style;
     }
-    get mode() {
-        return this.uniforms.mode.value;
+    get style() {
+        return this.uniforms.style.value;
     }
 
     set color0(color: THREE.Vector3 | THREE.Color)
@@ -110,7 +110,7 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
     transparent = false;
 
     uniforms = {
-        mode: { value: EBackgroundMode.LinearGradient },
+        style: { value: EBackgroundStyle.LinearGradient },
         color0: { value: new THREE.Vector3(0.15, 0.2, 0.25) },
         color1: { value: new THREE.Vector3(0, 0, 0) },
         noise: { value: 0.02 }
@@ -136,7 +136,7 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
         "uniform vec3 color0;",
         "uniform vec3 color1;",
         "uniform float noise;",
-        "uniform int mode;",
+        "uniform int style;",
         "varying vec2 ndc;",
 
         "float rand(vec2 co) {",
@@ -146,7 +146,7 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
         "}",
 
         "void main() {",
-        "  float f = mode == 0 ? 0.0 : (mode == 1 ? ndc.y * 0.5 + 0.5 : length(ndc) * 0.707);",
+        "  float f = style == 0 ? 0.0 : (style == 1 ? ndc.y * 0.5 + 0.5 : length(ndc) * 0.707);",
         "  gl_FragColor = vec4(mix(color0, color1, f) + noise * rand(ndc), 1.0);",
         "}"
     ].join("\n");
