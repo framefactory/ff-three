@@ -20,7 +20,7 @@ import UniversalCamera, {
     EViewPreset
 } from "./UniversalCamera";
 
-import OrbitManipulator from "./OrbitManipulator";
+import CameraController from "./CameraController";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +74,7 @@ export default class Viewport extends Publisher implements IViewportManip
 
     private _overlay: HTMLElement = null;
     private _camera: UniversalCamera = null;
-    private _manip: OrbitManipulator = null;
+    private _controller: CameraController = null;
 
     constructor(props?: IViewportProps)
     {
@@ -132,8 +132,8 @@ export default class Viewport extends Publisher implements IViewportManip
         return this._camera;
     }
 
-    get manip() {
-        return this._manip;
+    get controller() {
+        return this._controller;
     }
 
     get overlay() {
@@ -177,8 +177,8 @@ export default class Viewport extends Publisher implements IViewportManip
 
         this.updateGeometry();
 
-        if (this._manip) {
-            this._manip.setViewportSize(width, height);
+        if (this._controller) {
+            this._controller.setViewportSize(width, height);
         }
     }
 
@@ -205,34 +205,33 @@ export default class Viewport extends Publisher implements IViewportManip
     unsetBuiltInCamera()
     {
         this._camera = null;
+        this._controller = null;
     }
 
-    enableCameraManip(state: boolean): OrbitManipulator
+    enableCameraControl(state: boolean): CameraController
     {
-        if (!state && this._manip) {
-            this._manip = null;
+        if (!state && this._controller) {
+            this._controller = null;
         }
         else if (state && this._camera) {
-            if (!this._manip) {
-                this._manip = new OrbitManipulator();
-                this._manip.setViewportSize(this.width, this.height);
-                this._manip.setFromCamera(this._camera);
+            if (!this._controller) {
+                this._controller = new CameraController(this._camera);
+                this._controller.setViewportSize(this.width, this.height);
+                this._controller.updateController();
             }
         }
 
-        return this._manip;
+        return this._controller;
     }
 
-    moveCameraToView(box: THREE.Box3)
+    zoomExtents(box: THREE.Box3)
     {
         const camera = this._camera;
-        const manip = this._manip;
+        const controller = this._controller;
 
-        if (camera) {
-            camera.moveToView(box);
-            if (manip) {
-                manip.setFromCamera(camera, true);
-            }
+        if (camera && controller) {
+            controller.zoomExtents(box);
+            controller.updateCamera(null, true);
         }
     }
 
@@ -272,9 +271,8 @@ export default class Viewport extends Publisher implements IViewportManip
         if (this._camera) {
             currentCamera = this._camera;
 
-            if (this._manip) {
-                this._manip.update();
-                this._manip.toCamera(currentCamera);
+            if (this._controller) {
+                this._controller.updateCamera();
             }
         }
 
@@ -337,8 +335,8 @@ export default class Viewport extends Publisher implements IViewportManip
 
     onPointer(event: IPointerEvent)
     {
-        if (this._manip) {
-            return this._manip.onPointer(event);
+        if (this._controller) {
+            return this._controller.onPointer(event);
         }
 
         return false;
@@ -346,8 +344,8 @@ export default class Viewport extends Publisher implements IViewportManip
 
     onTrigger(event: ITriggerEvent)
     {
-        if (this._manip) {
-            return this._manip.onTrigger(event);
+        if (this._controller) {
+            return this._controller.onTrigger(event);
         }
 
         return false;
