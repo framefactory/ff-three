@@ -148,8 +148,8 @@ export default class CameraController implements IManip
         _box3.getSize(_vec3a);
         _box3.getCenter(_vec3b);
 
-        console.log("size", _vec3a);
-        console.log("center", _vec3b);
+        //console.log("size", _vec3a);
+        //console.log("center", _vec3b);
 
         offset.x = _vec3b.x;
         offset.y = _vec3b.y;
