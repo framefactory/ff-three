@@ -109,13 +109,16 @@ export default class GPUPicker
         const renderer = this.renderer;
         const pickTexture = this.pickTextures[0];
         const color = renderer.getClearColor().clone();
-        renderer.setClearColor(0);
 
         viewport.applyPickViewport(pickTexture, event);
-        renderer.render(scene, camera, pickTexture, true);
+        renderer.setRenderTarget(pickTexture);
+        renderer.setClearColor(0);
+        renderer.clear();
+        renderer.render(scene, camera);
 
-        renderer.setRenderTarget();
+        renderer.setRenderTarget(null);
         renderer.setClearColor(color);
+
         scene.overrideMaterial = overrideMaterial;
 
         const buffer = this.pickBuffer;
@@ -146,11 +149,14 @@ export default class GPUPicker
             shader.uniforms.range.value[0] = range.min.getComponent(i);
             shader.uniforms.range.value[1] = range.max.getComponent(i);
             viewport.applyPickViewport(pickTextures[i], event);
-            renderer.render(scene, camera, pickTextures[i], true);
+            renderer.setRenderTarget(pickTextures[i]);
+            renderer.clear();
+            renderer.render(scene, camera);
         }
 
-        renderer.setRenderTarget();
+        renderer.setRenderTarget(null);
         renderer.setClearColor(color);
+
         scene.overrideMaterial = overrideMaterial;
 
         const buffer = this.pickBuffer;
@@ -181,13 +187,16 @@ export default class GPUPicker
         const renderer = this.renderer;
         const pickTexture = this.pickTextures[0];
         const color = renderer.getClearColor().clone();
-        renderer.setClearColor(0);
 
         viewport.applyPickViewport(pickTexture, event);
-        renderer.render(scene, camera, pickTexture, true);
+        renderer.setRenderTarget(pickTexture);
+        renderer.setClearColor(0);
+        renderer.clear();
+        renderer.render(scene, camera);
 
-        renderer.setRenderTarget();
+        renderer.setRenderTarget(null);
         renderer.setClearColor(color);
+
         scene.overrideMaterial = overrideMaterial;
 
         const buffer = this.pickBuffer;

@@ -15,11 +15,9 @@ import {
     ITriggerEvent as IManipTriggerEvent
 } from "@ff/browser/ManipTarget";
 
-import UniversalCamera, {
-    EProjection,
-    EViewPreset
-} from "./UniversalCamera";
+import UniversalCamera, { EProjection, EViewPreset } from "./UniversalCamera";
 
+import ViewportOverlay, { ELocation } from "./ui/ViewportOverlay";
 import CameraController from "./CameraController";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,8 +40,8 @@ export interface IViewportManip
 
 export interface IViewportRect
 {
-    left: number;
-    top: number;
+    x: number;
+    y: number;
     width: number;
     height: number;
 }
@@ -55,11 +53,11 @@ export interface IViewportDisposeEvent extends ITypedEvent<"dispose">
 
 export interface IViewportProps
 {
-    left?: number;
-    top?: number;
+    x?: number;
+    y?: number;
     width?: number;
     height?: number;
-    overlay?: HTMLElement;
+    overlay?: ViewportOverlay;
 }
 
 export default class Viewport extends Publisher implements IViewportManip
@@ -72,7 +70,7 @@ export default class Viewport extends Publisher implements IViewportManip
     private _canvasWidth = 1;
     private _canvasHeight = 1;
 
-    private _overlay: HTMLElement = null;
+    private _overlay: ViewportOverlay = null;
     private _camera: UniversalCamera = null;
     private _controller: CameraController = null;
 
@@ -86,68 +84,90 @@ export default class Viewport extends Publisher implements IViewportManip
         props = props || {};
 
         this._relRect = {
-            left: props.left || 0,
-            top: props.top || 0,
+            x: props.x || 0,
+            y: props.y || 0,
             width: props.width || 1,
             height: props.height || 1
         };
 
         this._absRect = {
-            left: 0,
-            top: 0,
+            x: 0,
+            y: 0,
             width: 1,
             height: 1
         };
 
         if (props.overlay) {
-            this.overlay = props.overlay;
+            this._overlay = props.overlay;
         }
     }
 
-    get left() {
-        return this._absRect.left;
+    /**
+     * The x-coordinate of the viewport's bottom-left corner in canvas pixels. The origin is at the bottom left.
+     */
+    get x() {
+        return this._absRect.x;
     }
 
-    get top() {
-        return this._absRect.top;
+    /**
+     * The y-coordinate of the viewport's bottom-left corner in canvas pixels. The origin is at the bottom left.
+     */
+    get y() {
+        return this._absRect.y;
     }
 
+    /**
+     * The viewport's width in canvas pixels.
+     */
     get width() {
         return this._absRect.width;
     }
 
+    /**
+     * The viewport's height in canvas pixels.
+     */
     get height() {
         return this._absRect.height;
     }
 
+    /** The width of the canvas in pixels. */
     get canvasWidth() {
         return this._canvasWidth;
     }
 
+    /**
+     * The height of the canvas in pixels.
+     */
     get canvasHeight() {
         return this._canvasHeight;
     }
 
-    get camera() {
+    /** The viewport's built-in camera. */
+    get camera(): UniversalCamera | null {
         return this._camera;
     }
 
-    get controller() {
+    /**
+     * The controller of the build-in camera.
+     */
+    get controller(): CameraController | null {
         return this._controller;
     }
 
+    /**
+     * The viewport's overlay HTML element.
+     */
     get overlay() {
         return this._overlay;
     }
-    set overlay(overlay: HTMLElement) {
+    set overlay(overlay: ViewportOverlay) {
         this._overlay = overlay;
-        if (overlay) {
-            overlay.style.position = "absolute";
-            overlay.style.overflow = "hidden";
-            this.updateGeometry();
-        }
+        this.updateGeometry();
     }
 
+    /**
+     * Frees all resources the viewport object may have claimed.
+     */
     dispose()
     {
         console.log("Viewport.dispose - " + this.toString());
@@ -159,17 +179,23 @@ export default class Viewport extends Publisher implements IViewportManip
         }
     }
 
-    setSize(left?: number, top?: number, width?: number, height?: number)
+    /**
+     * Sets the size of the viewport in relative coordinates (origin at the bottom left, canvas width and height are 1).
+     */
+    setSize(x?: number, y?: number, width?: number, height?: number)
     {
         const relRect = this._relRect;
-        relRect.left = left;
-        relRect.top = top;
+        relRect.x = x;
+        relRect.y = y;
         relRect.width = width;
         relRect.height = height;
 
         this.updateGeometry();
     }
 
+    /**
+     *  Sets the size of the rendering canvas in pixels.
+     */
     setCanvasSize(width: number, height: number)
     {
         this._canvasWidth = width;
@@ -182,6 +208,11 @@ export default class Viewport extends Publisher implements IViewportManip
         }
     }
 
+    /** Creates or updates a built-in camera for the viewport. This camera will be used for rendering
+     * instead of the scene camera.
+     * @param type The camera's projection type (perspective or orthographic).
+     * @param preset The camera's preset view (one of six principal directions).
+     */
     setBuiltInCamera(type: EProjection, preset?: EViewPreset)
     {
         if (!this._camera) {
@@ -194,18 +225,18 @@ export default class Viewport extends Publisher implements IViewportManip
 
         if (preset !== undefined) {
             this._camera.setPreset(preset);
-
-            const textElement = document.createElement("div");
-            textElement.classList.add("ff-viewport-text");
-            textElement.innerText = EViewPreset[preset];
-            this._overlay.appendChild(textElement);
+            this.overlay.setLabel(ELocation.TopRight, "view", EViewPreset[preset], "ff-label-box");
         }
     }
 
+    /**
+     * Removes a previously set built-in camera. The scene camera will be used for rendering.
+     */
     unsetBuiltInCamera()
     {
         this._camera = null;
         this._controller = null;
+        this.overlay.unsetLabel(ELocation.TopRight, "view");
     }
 
     enableCameraControl(state: boolean): CameraController
@@ -224,6 +255,11 @@ export default class Viewport extends Publisher implements IViewportManip
         return this._controller;
     }
 
+    /**
+     * Centers and positions the built-in camera such that the given box is entirely visible.
+     * Does nothing if the viewport doesn't have a built-in camera and controller.
+     * @param box
+     */
     zoomExtents(box: THREE.Box3)
     {
         const camera = this._camera;
@@ -235,19 +271,36 @@ export default class Viewport extends Publisher implements IViewportManip
         }
     }
 
+    /**
+     * Tests whether the pointer coordinates of the given UI event lie inside the viewport.
+     * @param event
+     */
+    isInside(event: IBaseEvent): boolean
+    {
+        return this.isPointInside(event.localX, event.localY);
+    }
+
     isPointInside(x: number, y: number): boolean
     {
         const absRect = this._absRect;
-        return x >= absRect.left && x < absRect.left + absRect.width
-            && y >= absRect.top && y < absRect.top + absRect.height;
+        y = this.canvasHeight - y;
+
+        return x >= absRect.x && x < absRect.x + absRect.width
+            && y >= absRect.y && y < absRect.y + absRect.height;
     }
 
-    getDevicePoint(x: number, y: number, result?: THREE.Vector2): THREE.Vector2
+    /**
+     * Transforms the given local screen coordinates to normalized device coordinates.
+     * @param localX canvas-local x coordinate.
+     * @param localY canvas-local y coordinate.
+     * @param result An optional 2-vector receiving the transformed coordinates.
+     */
+    getDevicePoint(localX: number, localY: number, result?: THREE.Vector2): THREE.Vector2
     {
         const absRect = this._absRect;
 
-        const ndx = ((x - absRect.left) / absRect.width) * 2 - 1;
-        const ndy = 1 - ((y - absRect.top) / absRect.height) * 2;
+        const ndx = ((localX - absRect.x) / absRect.width) * 2 - 1;
+        const ndy = ((this.canvasHeight - localY - absRect.y) / absRect.height) * 2 - 1;
 
         return result ? result.set(ndx, ndy) : new THREE.Vector2(ndx, ndy);
     }
@@ -255,13 +308,13 @@ export default class Viewport extends Publisher implements IViewportManip
     getDeviceX(x: number): number
     {
         const absRect = this._absRect;
-        return ((x - absRect.left) / absRect.width) * 2 - 1;
+        return ((x - absRect.x) / absRect.width) * 2 - 1;
     }
 
     getDeviceY(y: number): number
     {
         const absRect = this._absRect;
-        return 1 - ((y - absRect.top) / absRect.height) * 2;
+        return ((this.canvasHeight - y - absRect.y) / absRect.height) * 2 - 1;
     }
 
     updateCamera(sceneCamera?: THREE.Camera): THREE.Camera
@@ -303,16 +356,16 @@ export default class Viewport extends Publisher implements IViewportManip
     applyViewport(renderer: THREE.WebGLRenderer)
     {
         const absRect = this._absRect;
-        renderer.setViewport(absRect.left, absRect.top, absRect.width, absRect.height);
+        renderer.setViewport(absRect.x, absRect.y, absRect.width, absRect.height);
         renderer["viewport"] = this;
     }
 
     applyPickViewport(target: THREE.WebGLRenderTarget, event: IBaseEvent)
     {
         const absRect = this._absRect;
-        const left = event.localX - absRect.left;
-        const top = event.localY - absRect.top;
-        target.viewport.set(-left, -absRect.height + top, absRect.width, absRect.height);
+        const x = event.localX - absRect.x;
+        const y = this.canvasHeight - event.localY - absRect.y;
+        target.viewport.set(-x, -y, absRect.width, absRect.height);
 
         //console.log("Viewport.applyPickViewport - offset: ", -left, -top);
     }
@@ -326,11 +379,6 @@ export default class Viewport extends Publisher implements IViewportManip
         vpEvent.deviceX = this.getDeviceX(event.localX);
         vpEvent.deviceY = this.getDeviceY(event.localY);
         return vpEvent;
-    }
-
-    isInside(event: IBaseEvent): boolean
-    {
-        return this.isPointInside(event.localX, event.localY);
     }
 
     onPointer(event: IPointerEvent)
@@ -353,7 +401,7 @@ export default class Viewport extends Publisher implements IViewportManip
 
     toString()
     {
-        return `Viewport (left: ${this.left}, top: ${this.top}, width: ${this.width}, height: ${this.height})`;
+        return `Viewport (x: ${this.x}, y: ${this.y}, width: ${this.width}, height: ${this.height})`;
     }
 
     protected updateGeometry()
@@ -363,15 +411,16 @@ export default class Viewport extends Publisher implements IViewportManip
         const canvasWidth = this._canvasWidth;
         const canvasHeight = this._canvasHeight;
 
-        absRect.left = Math.round(relRect.left * canvasWidth);
-        absRect.top = Math.round(relRect.top * canvasHeight);
+        absRect.x = Math.round(relRect.x * canvasWidth);
+        absRect.y = Math.round(relRect.y * canvasHeight);
         absRect.width = Math.round(relRect.width * canvasWidth);
         absRect.height = Math.round(relRect.height * canvasHeight);
-
+        
         const overlay = this._overlay;
         if (overlay) {
-            overlay.style.left = (absRect.left ? absRect.left.toFixed() + "px" : "0");
-            overlay.style.top = (absRect.top ? absRect.top.toFixed() + "px" : "0");
+            const top = this.canvasHeight - absRect.y - absRect.height;
+            overlay.style.left = (absRect.x ? absRect.x.toFixed() + "px" : "0");
+            overlay.style.top = (top ? top.toFixed() + "px" : "0");
             overlay.style.width = absRect.width.toFixed() + "px";
             overlay.style.height = absRect.height.toFixed() + "px";
         }
