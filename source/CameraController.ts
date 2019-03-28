@@ -78,8 +78,10 @@ export default class CameraController implements IManip
             this.mode = this.getModeFromEvent(event);
         }
 
-        this.deltaX += event.movementX;
-        this.deltaY += event.movementY;
+        const keyMultiplier = 1;
+
+        this.deltaX += event.movementX * keyMultiplier;
+        this.deltaY += event.movementY * keyMultiplier;
 
         // calculate pinch
         if (event.pointerCount === 2) {
@@ -291,8 +293,8 @@ export default class CameraController implements IManip
         if (this.offsetEnabled) {
             const factor = offset.z = dScale * offset.z;
 
-            offset.x += dX * factor * inverse * 2 / this.viewportHeight;
-            offset.y -= dY * factor * inverse * 2 / this.viewportHeight;
+            offset.x += dX * factor * inverse / this.viewportHeight;
+            offset.y -= dY * factor * inverse / this.viewportHeight;
 
             // check limits
             offset.x = math.limit(offset.x, minOffset.x, maxOffset.x);
