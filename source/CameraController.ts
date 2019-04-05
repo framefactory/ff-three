@@ -139,6 +139,11 @@ export default class CameraController implements IManip
         const camera = this.camera;
         const offset = this.offset;
 
+        if (!camera) {
+            console.warn("CameraController.zoomExtents - camera not set");
+            return;
+        }
+
         const padding = 1.1;
 
         // rotate box to camera space
