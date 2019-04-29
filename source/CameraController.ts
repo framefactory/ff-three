@@ -290,9 +290,9 @@ export default class CameraController implements IManip
             orbit.z += inverse * dRoll * 300 / this.viewportHeight;
 
             // check limits
-            orbit.x = math.limit(orbit.x, minOrbit.x, maxOrbit.x);
-            orbit.y = math.limit(orbit.y, minOrbit.y, maxOrbit.y);
-            orbit.z = math.limit(orbit.z, minOrbit.z, maxOrbit.z);
+            orbit.x = math.limit((orbit.x + 540) % 360 - 180, minOrbit.x, maxOrbit.x);
+            orbit.y = math.limit((orbit.y + 540) % 360 - 180, minOrbit.y, maxOrbit.y);
+            orbit.z = math.limit((orbit.z + 540) % 360 - 180, minOrbit.z, maxOrbit.z);
         }
 
         if (this.offsetEnabled) {
