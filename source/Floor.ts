@@ -74,6 +74,7 @@ export class FloorMaterial extends THREE.MeshPhongMaterial
         this.fragmentShader = fragmentShader;
 
         this.transparent = true;
+        this.shininess = 0;
     }
 }
 
