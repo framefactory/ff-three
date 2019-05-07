@@ -65,6 +65,9 @@ export function disposeObject(object: THREE.Object3D)
         }
     });
 
+    console.log("disposeObject - %s geometries, %s materials, %s textures",
+        geometries.size, materials.size, textures.size);
+
     for (let entry of textures) {
         entry[1].dispose();
     }

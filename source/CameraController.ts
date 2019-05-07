@@ -144,7 +144,7 @@ export default class CameraController implements IManip
             return;
         }
 
-        const padding = 1.1;
+        const padding = 0.8;
 
         // rotate box to camera space
         _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
