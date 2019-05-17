@@ -39,13 +39,13 @@ export default class ViewportOverlay extends CustomElement
     setLabel(location: ELocation, key: string, text: string, className?: string)
     {
         this.labels[location][key] = { text, className };
-        this.performUpdate();
+        this.requestUpdate();
     }
 
     unsetLabel(location: ELocation, key: string)
     {
         delete this.labels[location][key];
-        this.performUpdate();
+        this.requestUpdate();
     }
 
     protected firstConnected()
