@@ -170,7 +170,10 @@ export default class Viewport extends Publisher implements IViewportManip
      */
     dispose()
     {
-        console.log("Viewport.dispose - " + this.toString());
+        if (ENV_DEVELOPMENT) {
+            console.log("Viewport.dispose - " + this.toString());
+        }
+
         this.emit<IViewportDisposeEvent>({ type: "dispose", viewport: this });
 
         if (this._overlay) {
