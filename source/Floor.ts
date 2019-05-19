@@ -40,7 +40,6 @@ export default class Floor extends THREE.Mesh
 
 export interface IFloorMaterialParameters extends THREE.MeshPhongMaterialParameters
 {
-
 }
 
 export class FloorMaterial extends THREE.MeshPhongMaterial
