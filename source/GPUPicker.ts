@@ -17,7 +17,7 @@ import { IBaseEvent } from "./Viewport";
 
 const _vec3 = new THREE.Vector3();
 
-const _range = 100000;
+const _range = 10000;
 
 const _pickPositionRange = new THREE.Box3(
     new THREE.Vector3(-_range, -_range, -_range),
@@ -163,10 +163,12 @@ export default class GPUPicker
 
         for (let i = 0; i < 3; ++i) {
             renderer.readRenderTargetPixels(pickTextures[i], 0, 0, 1, 1, buffer);
-            result.setComponent(i, buffer[0] / 255
-                + buffer[1] / 255 / 256
-                + buffer[2] / 255 / 65536
-                + buffer[3] / 255 / 16777216);
+            result.setComponent(i,
+                  buffer[3] * 2.337437050015319e-10 /* / 255 / 16777216 */
+                + buffer[2] * 5.983838848039216e-8 /* / 255 / 65536 */
+                + buffer[1] * 1.531862745098039e-5 /* / 255 / 256 */
+                + buffer[0] * 0.003921568627451 /* / 255 */
+            );
         }
 
         range.getSize(_vec3);
