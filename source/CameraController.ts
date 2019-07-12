@@ -269,8 +269,8 @@ export default class CameraController implements IManip
                 break;
 
             case EManipMode.PanDolly:
-                const pinchScale = (this.deltaPinch - 1) * 0.5 + 1;
-                this.updatePose(this.deltaX, this.deltaY, 1 / pinchScale, 0, 0, 0);
+                const pinchScale = (this.deltaPinch - 1) * 0.42 + 1;
+                this.updatePose(this.deltaX * 0.75, this.deltaY * 0.75, 1 / pinchScale, 0, 0, 0);
                 break;
         }
     }
@@ -285,9 +285,9 @@ export default class CameraController implements IManip
         let inverse = -1;
 
         if (this.orientationEnabled) {
-            orbit.x += inverse * dPitch * 300 / this.viewportHeight;
-            orbit.y += inverse * dHead * 300 / this.viewportHeight;
-            orbit.z += inverse * dRoll * 300 / this.viewportHeight;
+            orbit.x += inverse * dPitch * 220 / this.viewportHeight;
+            orbit.y += inverse * dHead * 220 / this.viewportHeight;
+            orbit.z += inverse * dRoll * 220 / this.viewportHeight;
 
             // check limits
             orbit.x = math.limit(orbit.x, minOrbit.x, maxOrbit.x);
