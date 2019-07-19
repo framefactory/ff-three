@@ -22,7 +22,7 @@ export function degreesToQuaternion(rotation: number[], order: RotationOrder, qu
 
     _vec3.fromArray(rotation).multiplyScalar(THREE.Math.DEG2RAD);
     _euler.setFromVector3(_vec3, order);
-    result.setFromEuler(_euler, false);
+    result.setFromEuler(_euler);
 
     return result;
 }
@@ -31,7 +31,7 @@ export function quaternionToDegrees(quaternion: THREE.Quaternion, order: string,
 {
     const result = rotation || [ 0, 0, 0 ];
 
-    _euler.setFromQuaternion(quaternion, order, false);
+    _euler.setFromQuaternion(quaternion, order);
     _euler.toVector3(_vec3);
     _vec3.multiplyScalar(THREE.Math.RAD2DEG).toArray(result);
 
