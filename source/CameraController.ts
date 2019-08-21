@@ -134,6 +134,11 @@ export default class CameraController implements IManip
         }
     }
 
+    /**
+     * Adjusts the camera such that the given bounding box is entirely visible.
+     * This method can only be called if an internal camera has been assigned.
+     * @param box Bounding box
+     */
     zoomExtents(box: THREE.Box3)
     {
         const camera = this.camera;
@@ -144,8 +149,6 @@ export default class CameraController implements IManip
             return;
         }
 
-        const padding = 0.8;
-
         // rotate box to camera space
         _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.setScalar(0);
@@ -155,20 +158,17 @@ export default class CameraController implements IManip
         _box3.getSize(_vec3a);
         _box3.getCenter(_vec3b);
 
-        //console.log("size", _vec3a);
-        //console.log("center", _vec3b);
-
         offset.x = _vec3b.x;
         offset.y = _vec3b.y;
 
         const size = Math.max(_vec3a.x / camera.aspect, _vec3a.y);
 
         if (camera.isOrthographicCamera) {
-            offset.z = size * padding;
+            offset.z = size * 1.1; // add some padding
         }
         else {
             const fovFactor = 1 / (2 * Math.tan(camera.fov * math.DEG2RAD * 0.5));
-            offset.z = (size * fovFactor + _vec3b.z + _vec3a.z * 0.5) * padding;
+            offset.z = (_vec3b.z + size * fovFactor + _vec3a.z * 0.25 /* was 0.5 */);
         }
 
         this.maxOffset.z = Math.max(this.maxOffset.z, offset.z + _vec3a.z * 4);
@@ -177,6 +177,8 @@ export default class CameraController implements IManip
     /**
      * Updates the matrix of the given camera. If the camera's projection is orthographic,
      * updates the camera's size parameter as well.
+     * @param object Updates this object if given, otherwise updates the internal camera.
+     * @param force If true always updates, even if there haven't been any changes since the last update.
      */
     updateCamera(object?: THREE.Object3D, force?: boolean): boolean
     {
@@ -191,16 +193,14 @@ export default class CameraController implements IManip
         _vec3b.copy(this.offset);
 
         if (camera.isOrthographicCamera) {
-            _vec3b.z = this.maxOffset.z;
+            _vec3b.z = this.maxOffset.z; // fixed distance = maxOffset.z
+            camera.size = this.offset.z; // use size to visualize distance
+            camera.far = 2 * this.maxOffset.z; // adjust far clipping
+            camera.updateProjectionMatrix();
         }
 
         threeMath.composeOrbitMatrix(_vec3a, _vec3b, object.matrix);
         object.matrixWorldNeedsUpdate = true;
-
-        if (camera.isOrthographicCamera) {
-            camera.size = this.offset.z;
-            camera.updateProjectionMatrix();
-        }
 
         return true;
     }
