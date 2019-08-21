@@ -91,10 +91,11 @@ export default class HTMLSprite extends THREE.Object3D
      * Called when the model-view of the sprite has changed.
      * This updates the position and orientation of the HTML element.
      * @param container
-     * @param anchor
      * @param camera
+     * @param anchor
+     * @param offset
      */
-    renderHTMLElement(container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D): HTMLElement | null
+    renderHTMLElement(container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D, offset?: THREE.Vector3): HTMLElement | null
     {
         anchor = anchor || this;
 
@@ -115,7 +116,7 @@ export default class HTMLSprite extends THREE.Object3D
         _vec3a.set(0, 0, 0);
         _vec3a.applyMatrix4(anchor.modelViewMatrix);
 
-        _vec3b.set(0, 1, 0);
+        offset ? _vec3b.copy(offset) : _vec3b.set(0, 1, 0);
         _vec3b.applyMatrix4(anchor.modelViewMatrix);
 
         _vec3c.copy(_vec3b).sub(_vec3a).normalize();
