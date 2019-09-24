@@ -145,9 +145,10 @@ export default class HTMLSprite extends THREE.Object3D
 
     /**
      * Called when the sprite becomes visible in a viewport.
-     * Returns a HTML element to visualize the 2D part of the sprite in the viewport.
+     * Override to return a HTML element to visualize the 2D part of the sprite in the viewport.
+     * The default implementation returns null, i.e. no HTML elements are created for this sprite.
      */
-    protected createHTMLElement(): HTMLElement
+    protected createHTMLElement(): HTMLElement | null
     {
         return null;
     }
@@ -156,6 +157,7 @@ export default class HTMLSprite extends THREE.Object3D
      * Called when the HTML parts of the sprite should be updated because
      * the underlying data has been changed. This is called once for each viewport
      * the sprite is represented in with a HTML element.
+     * Method is not called if the sprite has no HTML element.
      * @param element The HTML element that should be updated.
      */
     protected updateHTMLElement(element: HTMLElement)
