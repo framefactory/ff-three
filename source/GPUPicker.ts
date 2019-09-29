@@ -98,6 +98,12 @@ export default class GPUPicker
         return undefined;
     }
 
+    /**
+     * Picks the index of the object at the position given by the event.
+     * @param scene The scene containing the objects available for picking.
+     * @param camera The active camera.
+     * @param event A UI event providing the screen position at which to pick.
+     */
     pickIndex(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): number
     {
         const viewport = event.viewport;
@@ -127,6 +133,15 @@ export default class GPUPicker
         return buffer[0] + buffer[1] * 256 + buffer[2] * 65536;
     }
 
+    /**
+     * Picks the local position on the surface of the object at the screen position of the given UI event.
+     * @param scene The scene containing the objects available for picking.
+     * @param camera The active camera.
+     * @param event A UI event providing the screen position at which to pick.
+     * @param range Optional range for the possible position values to be picked. Can be omitted. If given, should
+     * be set to the local bounding box of the object whose position is picked.
+     * @param result A vector containing the picked position in object-local coordinates.
+     */
     pickPosition(scene: THREE.Scene, camera: THREE.Camera,
         event: IBaseEvent, range?: THREE.Box3, result?: THREE.Vector3): THREE.Vector3
     {
@@ -175,6 +190,13 @@ export default class GPUPicker
         return result.multiply(_vec3).add(range.min);
     }
 
+    /**
+     * Picks the surface normal of the object at the screen position of the given UI event.
+     * @param scene The scene containing the objects available for picking.
+     * @param camera The active camera.
+     * @param event A UI event providing the screen position at which to pick.
+     * @param result A vector containing the picked normal in object-local coordinates.
+     */
     pickNormal(scene: THREE.Scene, camera: THREE.Camera,
             event: IBaseEvent, result?: THREE.Vector3): THREE.Vector3
     {
