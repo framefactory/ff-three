@@ -7,7 +7,11 @@
 
 import * as THREE from "three";
 
+import CustomElement, { customElement, html } from "@ff/ui/CustomElement";
+
 ////////////////////////////////////////////////////////////////////////////////
+
+export { html };
 
 const _vec3a = new THREE.Vector3();
 const _vec3b = new THREE.Vector3();
@@ -30,7 +34,7 @@ export default class HTMLSprite extends THREE.Object3D
     orientationAngle = 0;
     orientationQuadrant: EQuadrant = EQuadrant.TopLeft;
 
-    private _elements = new Map<HTMLElement, HTMLElement>();
+    private _elements = new Map<HTMLElement, SpriteElement>();
     private _visible = true;
 
     constructor()
@@ -47,7 +51,7 @@ export default class HTMLSprite extends THREE.Object3D
             this._visible = visible;
             this._elements.forEach(element => {
                 if (element) {
-                    this.setHTMLElementVisible(element, visible)
+                    element.setVisible(visible);
                 }
             });
         }
@@ -90,28 +94,15 @@ export default class HTMLSprite extends THREE.Object3D
     /**
      * Called when the model-view of the sprite has changed.
      * This updates the position and orientation of the HTML element.
-     * @param container
-     * @param camera
-     * @param anchor
-     * @param offset
+     * @param element The sprite HTML element to be updated.
+     * @param container The container holding the sprite element.
+     * @param camera The current scene camera.
+     * @param anchor The 3D object to which the HTML sprite element is attached.
+     * @param offset An offset to be added to the anchor 3D object.
      */
-    renderHTMLElement(container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D, offset?: THREE.Vector3): HTMLElement | null
+    renderHTMLElement(element: SpriteElement, container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D, offset?: THREE.Vector3)
     {
         anchor = anchor || this;
-
-        let element = this._elements.get(container);
-
-        if (!element) {
-            element = this.createHTMLElement();
-            if (element) {
-                container.appendChild(element);
-                this._elements.set(container, element);
-            }
-        }
-
-        if (!element) {
-            return null;
-        }
 
         _vec3a.set(0, 0, 0);
         _vec3a.applyMatrix4(anchor.modelViewMatrix);
@@ -134,11 +125,24 @@ export default class HTMLSprite extends THREE.Object3D
         const x = (_vec3b.x + 1) * 0.5 * container.clientWidth;
         const y = (1 - _vec3b.y) * 0.5 * container.clientHeight;
 
-        element.style.left = x.toString() + "px";
-        element.style.top = y.toString() + "px";
+        element.setPosition(x, y);
 
         const angle = this.orientationAngle = _vec2b.angle();
         this.orientationQuadrant = Math.floor(2 * angle / Math.PI);
+    }
+
+    getHTMLElement(container: HTMLElement): SpriteElement
+    {
+        let element = this._elements.get(container);
+
+        if (!element) {
+            element = this.createHTMLElement();
+            if (element) {
+                element.setVisible(this._visible);
+                container.appendChild(element);
+                this._elements.set(container, element);
+            }
+        }
 
         return element;
     }
@@ -148,7 +152,7 @@ export default class HTMLSprite extends THREE.Object3D
      * Override to return a HTML element to visualize the 2D part of the sprite in the viewport.
      * The default implementation returns null, i.e. no HTML elements are created for this sprite.
      */
-    protected createHTMLElement(): HTMLElement | null
+    protected createHTMLElement(): SpriteElement | null
     {
         return null;
     }
@@ -160,17 +164,31 @@ export default class HTMLSprite extends THREE.Object3D
      * Method is not called if the sprite has no HTML element.
      * @param element The HTML element that should be updated.
      */
-    protected updateHTMLElement(element: HTMLElement)
+    protected updateHTMLElement(element: SpriteElement)
     {
+        element.requestUpdate();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@customElement("ff-sprite-element")
+export class SpriteElement extends CustomElement
+{
+    setVisible(visible: boolean)
+    {
+        this.style.display = visible ? "block" : "none";
     }
 
-    /**
-     * Called when the visibility of the sprite changes.
-     * @param element The HTML element whose visibility should be changed.
-     * @param visible true if the sprite is currently visible.
-     */
-    protected setHTMLElementVisible(element: HTMLElement, visible: boolean)
+    setOpacity(opacity: number)
     {
-        element.style.display = visible ? "block" : "none";
+        this.style.opacity = opacity.toString();
+        this.style.visibility = opacity > 0 ? "visible" : "hidden";
+    }
+
+    setPosition(x: number, y: number)
+    {
+        this.style.left = x.toString() + "px";
+        this.style.top = y.toString() + "px";
     }
 }

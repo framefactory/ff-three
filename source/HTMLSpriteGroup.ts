@@ -74,7 +74,11 @@ export default class HTMLSpriteGroup extends THREE.Object3D
 
         const children = this.children as HTMLSprite[];
         for (let i = 0, n = children.length; i < n; ++i) {
-            children[i].renderHTMLElement(container, camera);
+            const child = children[i];
+            const element = child.getHTMLElement(container);
+            if (element) {
+                child.renderHTMLElement(element, container, camera);
+            }
         }
     }
 
