@@ -24,10 +24,15 @@ export default class Grid extends THREE.LineSegments
     {
         const geometry = Grid.generate(props);
         const material = new THREE.LineBasicMaterial({
-            vertexColors: THREE.VertexColors
+            vertexColors: THREE.VertexColors,
         });
 
         super(geometry, material);
+    }
+
+    set opacity(value: number) {
+        this.material["opacity"] = value;
+        this.material["transparent"] = value < 1;
     }
 
     update(props: IGridProps)
