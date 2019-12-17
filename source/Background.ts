@@ -52,8 +52,8 @@ export class BackgroundGeometry extends THREE.BufferGeometry
         const buffer = new THREE.InterleavedBuffer(vertices, 5);
 
         this.setIndex([ 0, 1, 2, 0, 2, 3 ]);
-        this.setAttribute('position', new THREE.InterleavedBufferAttribute(buffer, 3, 0, false));
-        this.setAttribute('uv', new THREE.InterleavedBufferAttribute(buffer, 2, 3, false));
+        this.addAttribute('position', new THREE.InterleavedBufferAttribute(buffer, 3, 0, false));
+        this.addAttribute('uv', new THREE.InterleavedBufferAttribute(buffer, 2, 3, false));
     }
 }
 

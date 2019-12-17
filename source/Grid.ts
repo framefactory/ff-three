@@ -69,8 +69,8 @@ export default class Grid extends THREE.LineSegments
         }
 
         const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+        geometry.addAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.addAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
         return geometry;
     }
