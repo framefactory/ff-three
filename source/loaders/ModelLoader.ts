@@ -6,13 +6,13 @@
  */
 
 import resolvePathname from "resolve-pathname";
-import * as THREE from "three";
 
-import "three/examples/js/loaders/GLTFLoader";
-import "three/examples/js/loaders/DRACOLoader";
+import {
+    Group,
+} from "three";
 
-const GLTFLoader = (THREE as any).GLTFLoader;
-const DRACOLoader = (THREE as any).DRACOLoader;
+import GLTFLoader from "three/examples/js/loaders/GLTFLoader";
+import DRACOLoader from "three/examples/js/loaders/DRACOLoader";
 
 import Loader from "./Loader";
 
@@ -55,7 +55,7 @@ export default class ModelLoader extends Loader
                     throw new Error("not a valid gltf scene");
                 }
 
-                const model = new THREE.Group();
+                const model = new Group();
                 scene.children.forEach(child => model.add(child));
                 resolve(model);
 

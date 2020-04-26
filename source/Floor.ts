@@ -5,7 +5,15 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Mesh,
+    MeshPhongMaterial,
+    MeshPhongMaterialParameters,
+    PlaneBufferGeometry,
+    MathUtils,
+    UniformsUtils,
+    ShaderLib,
+} from "three";
 
 import { Dictionary } from "@ff/core/types";
 
@@ -14,19 +22,19 @@ const vertexShader = require("./shaders/floorPhongShader.vert").default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Floor extends THREE.Mesh
+export default class Floor extends Mesh
 {
-    geometry: THREE.PlaneBufferGeometry;
+    geometry: PlaneBufferGeometry;
     material: FloorMaterial;
 
     constructor()
     {
         super(
-            new THREE.PlaneBufferGeometry(2, 2, 1, 1),
+            new PlaneBufferGeometry(2, 2, 1, 1),
             new FloorMaterial()
         );
 
-        this.geometry.rotateX(-90 * THREE.Math.DEG2RAD);
+        this.geometry.rotateX(-90 * MathUtils.DEG2RAD);
 
         this.receiveShadow = true;
     }
@@ -38,11 +46,11 @@ export default class Floor extends THREE.Mesh
     }
 }
 
-export interface IFloorMaterialParameters extends THREE.MeshPhongMaterialParameters
+export interface IFloorMaterialParameters extends MeshPhongMaterialParameters
 {
 }
 
-export class FloorMaterial extends THREE.MeshPhongMaterial
+export class FloorMaterial extends MeshPhongMaterial
 {
     isMeshPhongMaterial: boolean;
     isFloorMaterial: boolean;
@@ -65,8 +73,8 @@ export class FloorMaterial extends THREE.MeshPhongMaterial
         this.isFloorMaterial = true;
 
         this.defines = {};
-        this.uniforms = THREE.UniformsUtils.merge([
-            THREE.ShaderLib.phong.uniforms
+        this.uniforms = UniformsUtils.merge([
+            ShaderLib.phong.uniforms
         ]);
 
         this.vertexShader = vertexShader;

@@ -5,7 +5,9 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    LoadingManager,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +23,7 @@ export default class Loader
         return (this.constructor as typeof Loader).assetType;
     }
 
-    constructor(loadingManager: THREE.LoadingManager)
+    constructor(loadingManager: LoadingManager)
     {
     }
 

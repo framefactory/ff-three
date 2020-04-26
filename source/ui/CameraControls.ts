@@ -9,8 +9,8 @@ import CustomElement, { customElement, html, property } from "@ff/ui/CustomEleme
 
 import "@ff/ui/IndexButton";
 import { IButtonClickEvent } from "@ff/ui/Button";
+
 import "./ViewCube";
-import { IViewCubeSelectEvent } from "./ViewCube";
 
 import { EProjection } from "../UniversalCamera";
 

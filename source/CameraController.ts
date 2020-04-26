@@ -5,7 +5,12 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    Vector3,
+    Matrix4,
+    Box3,
+} from "three";
 
 import math from "@ff/core/math";
 
@@ -20,10 +25,10 @@ import UniversalCamera from "./UniversalCamera";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _mat4 = new THREE.Matrix4();
-const _box3 = new THREE.Box3();
-const _vec3a = new THREE.Vector3();
-const _vec3b = new THREE.Vector3();
+const _mat4 = new Matrix4();
+const _box3 = new Box3();
+const _vec3a = new Vector3();
+const _vec3b = new Vector3();
 
 enum EControllerMode { Orbit, FirstPerson }
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
@@ -34,13 +39,13 @@ export default class CameraController implements IManip
 {
     camera: UniversalCamera;
 
-    orbit = new THREE.Vector3(0, 0, 0);
-    offset = new THREE.Vector3(0, 0, 50);
+    orbit = new Vector3(0, 0, 0);
+    offset = new Vector3(0, 0, 50);
 
-    minOrbit = new THREE.Vector3(-90, -Infinity, -Infinity);
-    maxOrbit = new THREE.Vector3(90, Infinity, Infinity);
-    minOffset = new THREE.Vector3(-Infinity, -Infinity, 0.1);
-    maxOffset = new THREE.Vector3(Infinity, Infinity, 1000);
+    minOrbit = new Vector3(-90, -Infinity, -Infinity);
+    maxOrbit = new Vector3(90, Infinity, Infinity);
+    minOffset = new Vector3(-Infinity, -Infinity, 0.1);
+    maxOffset = new Vector3(Infinity, Infinity, 1000);
 
     orientationEnabled = true;
     offsetEnabled = true;
@@ -118,7 +123,7 @@ export default class CameraController implements IManip
         this.viewportHeight = height;
     }
 
-    updateController(object?: THREE.Object3D, adaptLimits?: boolean)
+    updateController(object?: Object3D, adaptLimits?: boolean)
     {
         const camera = this.camera;
         object = object || camera;
@@ -139,7 +144,7 @@ export default class CameraController implements IManip
      * This method can only be called if an internal camera has been assigned.
      * @param box Bounding box
      */
-    zoomExtents(box: THREE.Box3)
+    zoomExtents(box: Box3)
     {
         const camera = this.camera;
         const offset = this.offset;
@@ -180,7 +185,7 @@ export default class CameraController implements IManip
      * @param object Updates this object if given, otherwise updates the internal camera.
      * @param force If true always updates, even if there haven't been any changes since the last update.
      */
-    updateCamera(object?: THREE.Object3D, force?: boolean): boolean
+    updateCamera(object?: Object3D, force?: boolean): boolean
     {
         const camera = this.camera;
         object = object || camera;

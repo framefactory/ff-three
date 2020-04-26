@@ -5,11 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    ShaderMaterial,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class IndexShader extends THREE.ShaderMaterial
+export default class IndexShader extends ShaderMaterial
 {
     static indexFromPixel(pixel: Uint8Array)
     {

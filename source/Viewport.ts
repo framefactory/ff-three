@@ -5,7 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    WebGLRenderer,
+    WebGLRenderTarget,
+    Camera,
+    Vector2,
+    Box3,
+} from "three";
 
 import Publisher, { ITypedEvent } from "@ff/core/Publisher";
 
@@ -263,7 +269,7 @@ export default class Viewport extends Publisher implements IViewportManip
      * Does nothing if the viewport doesn't have a built-in camera and controller.
      * @param box
      */
-    zoomExtents(box: THREE.Box3)
+    zoomExtents(box: Box3)
     {
         const camera = this._camera;
         const controller = this._controller;
@@ -298,14 +304,14 @@ export default class Viewport extends Publisher implements IViewportManip
      * @param localY canvas-local y coordinate.
      * @param result An optional 2-vector receiving the transformed coordinates.
      */
-    getDevicePoint(localX: number, localY: number, result?: THREE.Vector2): THREE.Vector2
+    getDevicePoint(localX: number, localY: number, result?: Vector2): Vector2
     {
         const absRect = this._absRect;
 
         const ndx = ((localX - absRect.x) / absRect.width) * 2 - 1;
         const ndy = ((this.canvasHeight - localY - absRect.y) / absRect.height) * 2 - 1;
 
-        return result ? result.set(ndx, ndy) : new THREE.Vector2(ndx, ndy);
+        return result ? result.set(ndx, ndy) : new Vector2(ndx, ndy);
     }
 
     getDeviceX(x: number): number
@@ -320,7 +326,7 @@ export default class Viewport extends Publisher implements IViewportManip
         return ((this.canvasHeight - y - absRect.y) / absRect.height) * 2 - 1;
     }
 
-    updateCamera(sceneCamera?: THREE.Camera): THREE.Camera
+    updateCamera(sceneCamera?: Camera): Camera
     {
         let currentCamera: any = sceneCamera;
 
@@ -356,14 +362,14 @@ export default class Viewport extends Publisher implements IViewportManip
         return currentCamera;
     }
 
-    applyViewport(renderer: THREE.WebGLRenderer)
+    applyViewport(renderer: WebGLRenderer)
     {
         const absRect = this._absRect;
         renderer.setViewport(absRect.x, absRect.y, absRect.width, absRect.height);
         renderer["viewport"] = this;
     }
 
-    applyPickViewport(target: THREE.WebGLRenderTarget, event: IBaseEvent)
+    applyPickViewport(target: WebGLRenderTarget, event: IBaseEvent)
     {
         const absRect = this._absRect;
         const x = event.localX - absRect.x;

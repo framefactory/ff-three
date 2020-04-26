@@ -5,13 +5,21 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Mesh,
+    BufferGeometry,
+    InterleavedBuffer,
+    InterleavedBufferAttribute,
+    RawShaderMaterial,
+    Vector3,
+    Color,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export enum EBackgroundStyle { Solid, LinearGradient, RadialGradient }
 
-export default class Background extends THREE.Mesh
+export default class Background extends Mesh
 {
     geometry: BackgroundGeometry;
     material: BackgroundMaterial;
@@ -36,7 +44,7 @@ export default class Background extends THREE.Mesh
     }
 }
 
-export class BackgroundGeometry extends THREE.BufferGeometry
+export class BackgroundGeometry extends BufferGeometry
 {
     constructor()
     {
@@ -49,15 +57,15 @@ export class BackgroundGeometry extends THREE.BufferGeometry
             -1, 1, 0, 0, 1
         ]);
 
-        const buffer = new THREE.InterleavedBuffer(vertices, 5);
+        const buffer = new InterleavedBuffer(vertices, 5);
 
         this.setIndex([ 0, 1, 2, 0, 2, 3 ]);
-        this.setAttribute('position', new THREE.InterleavedBufferAttribute(buffer, 3, 0, false));
-        this.setAttribute('uv', new THREE.InterleavedBufferAttribute(buffer, 2, 3, false));
+        this.setAttribute('position', new InterleavedBufferAttribute(buffer, 3, 0, false));
+        this.setAttribute('uv', new InterleavedBufferAttribute(buffer, 2, 3, false));
     }
 }
 
-export class BackgroundMaterial extends THREE.RawShaderMaterial
+export class BackgroundMaterial extends RawShaderMaterial
 {
     set style(style: EBackgroundStyle) {
         this.uniforms.style.value = style;
@@ -66,9 +74,9 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
         return this.uniforms.style.value;
     }
 
-    set color0(color: THREE.Vector3 | THREE.Color)
+    set color0(color: Vector3 | Color)
     {
-        if (color instanceof THREE.Color) {
+        if (color instanceof Color) {
             const value = this.uniforms.color0.value;
             value.x = color.r;
             value.y = color.g;
@@ -82,9 +90,9 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
         return this.uniforms.color0.value;
     }
 
-    set color1(color: THREE.Vector3 | THREE.Color)
+    set color1(color: Vector3 | Color)
     {
-        if (color instanceof THREE.Color) {
+        if (color instanceof Color) {
             const value = this.uniforms.color1.value;
             value.x = color.r;
             value.y = color.g;
@@ -111,8 +119,8 @@ export class BackgroundMaterial extends THREE.RawShaderMaterial
 
     uniforms = {
         style: { value: EBackgroundStyle.LinearGradient },
-        color0: { value: new THREE.Vector3(0.15, 0.2, 0.25) },
-        color1: { value: new THREE.Vector3(0, 0, 0) },
+        color0: { value: new Vector3(0.15, 0.2, 0.25) },
+        color1: { value: new Vector3(0, 0, 0) },
         noise: { value: 0.02 }
     };
 

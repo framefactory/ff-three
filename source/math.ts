@@ -5,22 +5,29 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Vector3,
+    Vector4,
+    Matrix4,
+    Euler,
+    Quaternion,
+} from "three";
+
 import baseMath from "@ff/core/math";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _vec4a = new THREE.Vector4();
-const _vec4b = new THREE.Vector4();
-const _vec3a = new THREE.Vector3();
-const _vec3b = new THREE.Vector3();
-const _mat4 = new THREE.Matrix4();
-const _euler = new THREE.Euler();
-const _quat = new THREE.Quaternion();
+const _vec4a = new Vector4();
+const _vec4b = new Vector4();
+const _vec3a = new Vector3();
+const _vec3b = new Vector3();
+const _mat4 = new Matrix4();
+const _euler = new Euler();
+const _quat = new Quaternion();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type Matrix4 = Float32Array | number[];
+//export type Matrix4 = Float32Array | number[];
 
 const math = {
     PI: 3.1415926535897932384626433832795,
@@ -30,7 +37,7 @@ const math = {
     DEG2RAD: 0.01745329251994329576923690768489,
     RAD2DEG: 57.295779513082320876798154814105,
 
-    composeOrbitMatrix: function(orientation: THREE.Vector3, offset: THREE.Vector3, result?: THREE.Matrix4): THREE.Matrix4
+    composeOrbitMatrix: function(orientation: Vector3, offset: Vector3, result?: Matrix4): Matrix4
     {
         const pitch = orientation.x;
         const head = orientation.y;
@@ -57,7 +64,7 @@ const math = {
         const m21 = cosY * sinX;
         const m22 = cosY * cosX;
 
-        result = result || new THREE.Matrix4();
+        result = result || new Matrix4();
         const e = result.elements;
 
         e[0] = m00;
@@ -81,7 +88,7 @@ const math = {
         return result;
     },
 
-    decomposeOrbitMatrix: function(matrix: THREE.Matrix4, orientationOut: THREE.Vector3, offsetOut: THREE.Vector3)
+    decomposeOrbitMatrix: function(matrix: Matrix4, orientationOut: Vector3, offsetOut: Vector3)
     {
         _euler.setFromRotationMatrix(matrix, "ZYX");
         _euler.toVector3(orientationOut);
@@ -95,7 +102,7 @@ const math = {
         offsetOut.z = -_vec4a.z;
     },
 
-    isMatrix4Identity: function(matrix: THREE.Matrix4)
+    isMatrix4Identity: function(matrix: Matrix4)
     {
         const e = matrix.elements;
         return e[0]  === 1 && e[1]  === 0 && e[2]  === 0 && e[3]  === 0

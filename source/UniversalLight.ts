@@ -5,14 +5,22 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    Light,
+    LightShadow,
+    DirectionalLightShadow,
+    SpotLightShadow,
+    PerspectiveCamera,
+} from "three";
+
 import uniqueId from "@ff/core/uniqueId";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export enum ELightType { Directional, Point, Spot }
 
-export default class UniversalLight extends THREE.Light
+export default class UniversalLight extends Light
 {
     type: string;
     isDirectionalLight: boolean;
@@ -52,7 +60,7 @@ export default class UniversalLight extends THREE.Light
             this.isPointLight = true;
             this.isSpotLight = false;
 
-            this.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(90, 1, 0.5, 500));
+            this.shadow = new LightShadow(new PerspectiveCamera(90, 1, 0.5, 500));
         }
         else if (type === ELightType.Spot) {
             this.type = "SpotLight";
@@ -60,11 +68,11 @@ export default class UniversalLight extends THREE.Light
             this.isPointLight = false;
             this.isSpotLight = true;
 
-            this.position.copy(THREE.Object3D.DefaultUp);
+            this.position.copy(Object3D.DefaultUp);
             this.updateMatrix();
-            this.target = new THREE.Object3D();
+            this.target = new Object3D();
 
-            this.shadow = new THREE.SpotLightShadow(undefined);
+            this.shadow = new SpotLightShadow(undefined);
         }
         else {
             this.type = "DirectionalLight";
@@ -72,11 +80,11 @@ export default class UniversalLight extends THREE.Light
             this.isPointLight = false;
             this.isSpotLight = false;
 
-            this.position.copy(THREE.Object3D.DefaultUp);
+            this.position.copy(Object3D.DefaultUp);
             this.updateMatrix();
-            this.target = new THREE.Object3D();
+            this.target = new Object3D();
 
-            this.shadow = new THREE.DirectionalLightShadow(undefined);
+            this.shadow = new DirectionalLightShadow(undefined);
         }
     }
 

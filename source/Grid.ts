@@ -5,7 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    LineSegments,
+    LineBasicMaterial,
+    BufferGeometry,
+    Float32BufferAttribute,
+    Color,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -18,13 +24,14 @@ export interface IGridProps
     subColor: THREE.Color | string | number;
 }
 
-export default class Grid extends THREE.LineSegments
+export default class Grid extends LineSegments
 {
     constructor(props: IGridProps)
     {
         const geometry = Grid.generate(props);
-        const material = new THREE.LineBasicMaterial({
-            vertexColors: THREE.VertexColors,
+        const material = new LineBasicMaterial({
+            color: 0xffffffff,
+            vertexColors: true,
         });
 
         super(geometry, material);
@@ -46,8 +53,8 @@ export default class Grid extends THREE.LineSegments
 
     protected static generate(props: IGridProps): THREE.BufferGeometry
     {
-        const mainColor = new THREE.Color(props.mainColor as any);
-        const subColor = new THREE.Color(props.subColor as any);
+        const mainColor = new Color(props.mainColor as any);
+        const subColor = new Color(props.subColor as any);
 
         const divisions = props.mainDivisions * props.subDivisions;
         const step = props.size / divisions;
@@ -68,9 +75,9 @@ export default class Grid extends THREE.LineSegments
             color.toArray(colors, j); j += 3;
         }
 
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
 
         return geometry;
     }

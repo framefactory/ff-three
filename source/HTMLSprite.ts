@@ -5,7 +5,12 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    Camera,
+    Vector2,
+    Vector3,
+} from "three";
 
 import CustomElement, { customElement, html } from "@ff/ui/CustomElement";
 
@@ -13,12 +18,12 @@ import CustomElement, { customElement, html } from "@ff/ui/CustomElement";
 
 export { html };
 
-const _vec3a = new THREE.Vector3();
-const _vec3b = new THREE.Vector3();
-const _vec3c = new THREE.Vector3();
-const _vec3d = new THREE.Vector3();
-const _vec2a = new THREE.Vector2();
-const _vec2b = new THREE.Vector2();
+const _vec3a = new Vector3();
+const _vec3b = new Vector3();
+const _vec3c = new Vector3();
+const _vec3d = new Vector3();
+const _vec2a = new Vector2();
+const _vec2b = new Vector2();
 
 export enum EQuadrant { TopRight, TopLeft, BottomLeft, BottomRight }
 
@@ -26,7 +31,7 @@ export enum EQuadrant { TopRight, TopLeft, BottomLeft, BottomRight }
  * A Three.js Object representing a 3D renderable part and a 2D (HTML) part.
  * HTML sprites should have a [[HTMLSpriteGroup]] as their parent.
  */
-export default class HTMLSprite extends THREE.Object3D
+export default class HTMLSprite extends Object3D
 {
     readonly isHTMLSprite = true;
 
@@ -100,7 +105,7 @@ export default class HTMLSprite extends THREE.Object3D
      * @param anchor The 3D object to which the HTML sprite element is attached.
      * @param offset An offset to be added to the anchor 3D object.
      */
-    renderHTMLElement(element: SpriteElement, container: HTMLElement, camera: THREE.Camera, anchor?: THREE.Object3D, offset?: THREE.Vector3)
+    renderHTMLElement(element: SpriteElement, container: HTMLElement, camera: Camera, anchor?: Object3D, offset?: Vector3)
     {
         anchor = anchor || this;
 

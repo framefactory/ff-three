@@ -5,7 +5,11 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    TextureLoader as ThreeTextureLoader,
+    LoadingManager,
+    Texture,
+} from "three";
 
 import Loader from "./Loader";
 
@@ -16,16 +20,16 @@ export default class TextureLoader extends Loader
     static readonly assetType = "texture";
     static readonly extensions = [ "jpg", "jpeg", "png" ];
 
-    protected textureLoader: THREE.TextureLoader;
+    protected textureLoader: ThreeTextureLoader;
 
-    constructor(loadingManager: THREE.LoadingManager)
+    constructor(loadingManager: LoadingManager)
     {
         super(loadingManager);
 
-        this.textureLoader = new THREE.TextureLoader(loadingManager);
+        this.textureLoader = new ThreeTextureLoader(loadingManager);
     }
 
-    async load(url: string): Promise<THREE.Texture>
+    async load(url: string): Promise<Texture>
     {
         return new Promise((resolve, reject) => {
             this.textureLoader.load(url, texture => {

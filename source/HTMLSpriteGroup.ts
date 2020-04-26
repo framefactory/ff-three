@@ -5,7 +5,10 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    Camera,
+} from "three";
 
 import HTMLSprite from "./HTMLSprite";
 
@@ -16,7 +19,7 @@ export { HTMLSprite };
 /**
  * THREE 3D object, grouping a number of HTML sprites.
  */
-export default class HTMLSpriteGroup extends THREE.Object3D
+export default class HTMLSpriteGroup extends Object3D
 {
     readonly isHTMLSpriteGroup = true;
 
@@ -66,7 +69,7 @@ export default class HTMLSpriteGroup extends THREE.Object3D
      * @param container HTML container element for the HTML elements.
      * @param camera The camera used to render the 3D scene.
      */
-    render(container: HTMLElement, camera: THREE.Camera)
+    render(container: HTMLElement, camera: Camera)
     {
         if (!this.visible) {
             return;

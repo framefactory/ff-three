@@ -5,13 +5,8 @@
  * License: MIT
  */
 
-import * as THREE from "three";
-
-import "three/examples/js/loaders/OBJLoader";
-const OBJLoader = (THREE as any).OBJLoader;
-
-import "three/examples/js/loaders/PLYLoader";
-const PLYLoader = (THREE as any).PLYLoader;
+import OBJLoader from "three/examples/js/loaders/OBJLoader";
+import PLYLoader from "three/examples/js/loaders/PLYLoader";
 
 import Loader from "./Loader";
 

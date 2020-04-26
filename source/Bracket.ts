@@ -5,18 +5,29 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    LineSegments,
+    LineBasicMaterial,
+    BufferGeometry,
+    Float32BufferAttribute,
+    Vector3,
+    Matrix4,
+    Box3,
+    Color,
+} from "three";
+
 import { computeLocalBoundingBox } from "./helpers";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _vec3 = new THREE.Vector3();
-const _mat4 = new THREE.Matrix4();
+const _vec3 = new Vector3();
+const _mat4 = new Matrix4();
 
 export interface IBracketProps
 {
     /** Color of the bracket lines. Default is white. */
-    color?: THREE.Color;
+    color?: Color;
     /** Length of the bracket lines relative to the size of the object. Default is 0.25. */
     length?: number;
 }
@@ -24,18 +35,18 @@ export interface IBracketProps
 /**
  * Wireframe selection bracket.
  */
-export default class Bracket extends THREE.LineSegments
+export default class Bracket extends LineSegments
 {
     static readonly defaultProps = {
-        color: new THREE.Color("#ffd633"),
+        color: new Color("#ffd633"),
         length: 0.25
     };
 
-    constructor(target: THREE.Object3D, props?: IBracketProps)
+    constructor(target: Object3D, props?: IBracketProps)
     {
         props = Object.assign({}, Bracket.defaultProps, props);
 
-        const box = new THREE.Box3();
+        const box = new Box3();
         box.makeEmpty();
 
         computeLocalBoundingBox(target, box);
@@ -89,10 +100,10 @@ export default class Bracket extends THREE.LineSegments
             ];
         }
 
-        const geometry = new THREE.BufferGeometry();
-        geometry.addAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
 
-        const material = new THREE.LineBasicMaterial({
+        const material = new LineBasicMaterial({
             color: props.color,
             depthTest: false
         });
@@ -116,7 +127,7 @@ export default class Bracket extends THREE.LineSegments
         this.geometry.dispose();
     }
 
-    protected static expandBoundingBox(object: THREE.Object3D, root: THREE.Object3D, box: THREE.Box3)
+    protected static expandBoundingBox(object: Object3D, root: Object3D, box: Box3)
     {
         const geometry = (object as any).geometry;
         if (geometry !== undefined) {

@@ -5,7 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import{
+    Object3D,
+    Camera,
+    Vector3,
+    Matrix4,
+    Box3,
+} from "three";
 
 import math from "@ff/core/math";
 
@@ -19,8 +25,8 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _vec3a = new THREE.Vector3();
-const _vec3b = new THREE.Vector3();
+const _vec3a = new Vector3();
+const _vec3b = new Vector3();
 
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
@@ -28,15 +34,15 @@ enum EManipPhase { Off, Active, Release }
 
 export default class OrbitManipulator implements IManip
 {
-    orbit = new THREE.Vector3(0, 0, 0);
-    offset = new THREE.Vector3(0, 0, 50);
+    orbit = new Vector3(0, 0, 0);
+    offset = new Vector3(0, 0, 50);
     size = 50;
     zoom = 1;
 
-    minOrbit = new THREE.Vector3(-90, -Infinity, -Infinity);
-    maxOrbit = new THREE.Vector3(90, Infinity, Infinity);
-    minOffset = new THREE.Vector3(-Infinity, -Infinity, 0.1);
-    maxOffset = new THREE.Vector3(Infinity, Infinity, 1000);
+    minOrbit = new Vector3(-90, -Infinity, -Infinity);
+    maxOrbit = new Vector3(90, Infinity, Infinity);
+    minOffset = new Vector3(-Infinity, -Infinity, 0.1);
+    maxOffset = new Vector3(Infinity, Infinity, 1000);
 
     orientationEnabled = true;
     offsetEnabled = true;
@@ -113,7 +119,7 @@ export default class OrbitManipulator implements IManip
         this.viewportHeight = height;
     }
 
-    setFromCamera(camera: THREE.Camera, adaptLimits: boolean = false)
+    setFromCamera(camera: Camera, adaptLimits: boolean = false)
     {
         const orbit = this.orbit;
         const offset = this.offset;
@@ -131,7 +137,7 @@ export default class OrbitManipulator implements IManip
         }
     }
 
-    setFromObject(object: THREE.Object3D)
+    setFromObject(object: Object3D)
     {
         threeMath.decomposeOrbitMatrix(object.matrix, this.orbit, this.offset);
         this.orbit.multiplyScalar(threeMath.RAD2DEG);
@@ -139,7 +145,7 @@ export default class OrbitManipulator implements IManip
         this.orthographicMode = false;
     }
 
-    setFromMatrix(matrix: THREE.Matrix4, invert: boolean = false)
+    setFromMatrix(matrix: Matrix4, invert: boolean = false)
     {
         threeMath.decomposeOrbitMatrix(matrix, this.orbit, this.offset);
         this.orbit.multiplyScalar(threeMath.RAD2DEG);
@@ -147,7 +153,7 @@ export default class OrbitManipulator implements IManip
         this.orthographicMode = false;
     }
 
-    zoomExtent(box: THREE.Box3, fovY: number = 52)
+    zoomExtent(box: Box3, fovY: number = 52)
     {
         box.getSize(_vec3a);
         box.getCenter(_vec3b);
@@ -170,7 +176,7 @@ export default class OrbitManipulator implements IManip
      * updates the camera's size parameter as well.
      * @param camera
      */
-    toCamera(camera: THREE.Camera)
+    toCamera(camera: Camera)
     {
         _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);
@@ -203,7 +209,7 @@ export default class OrbitManipulator implements IManip
      * Sets the given object's matrix from the manipulator's current orbit and offset.
      * @param object
      */
-    toObject(object: THREE.Object3D)
+    toObject(object: Object3D)
     {
         _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);
@@ -220,7 +226,7 @@ export default class OrbitManipulator implements IManip
      * Sets the given matrix from the manipulator's current orbit and offset.
      * @param matrix
      */
-    toMatrix(matrix: THREE.Matrix4)
+    toMatrix(matrix: Matrix4)
     {
         _vec3a.copy(this.orbit).multiplyScalar(math.DEG2RAD);
         _vec3b.copy(this.offset);

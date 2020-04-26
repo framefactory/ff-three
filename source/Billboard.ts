@@ -5,11 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Billboard extends THREE.Object3D
+export default class Billboard extends Object3D
 {
     readonly isSprite = true;
 

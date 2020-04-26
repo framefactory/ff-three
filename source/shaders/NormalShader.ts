@@ -5,11 +5,13 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    ShaderMaterial,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class NormalShader extends THREE.ShaderMaterial
+export default class NormalShader extends ShaderMaterial
 {
     isNormalShader = true;
 

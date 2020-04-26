@@ -5,33 +5,41 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Camera,
+    PerspectiveCamera,
+    OrthographicCamera,
+    Vector3,
+    Box3,
+    Matrix4,
+    MathUtils,
+} from "three";
 
 import math from "@ff/core/math";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const _halfPi = Math.PI * 0.5;
-const _box = new THREE.Box3();
-const _size = new THREE.Vector3();
-const _center = new THREE.Vector3();
-const _translation = new THREE.Vector3();
-const _mat4a = new THREE.Matrix4();
-const _mat4b = new THREE.Matrix4();
+const _box = new Box3();
+const _size = new Vector3();
+const _center = new Vector3();
+const _translation = new Vector3();
+const _mat4a = new Matrix4();
+const _mat4b = new Matrix4();
 
 const _cameraOrientation = [
-    new THREE.Vector3(0, -_halfPi, 0), // left
-    new THREE.Vector3(0, _halfPi, 0),  // right
-    new THREE.Vector3(-_halfPi, 0, 0),  // top
-    new THREE.Vector3(_halfPi, 0, 0), // bottom
-    new THREE.Vector3(0, 0, 0),        // front
-    new THREE.Vector3(0, Math.PI, 0),  // back
+    new Vector3(0, -_halfPi, 0), // left
+    new Vector3(0, _halfPi, 0),  // right
+    new Vector3(-_halfPi, 0, 0),  // top
+    new Vector3(_halfPi, 0, 0), // bottom
+    new Vector3(0, 0, 0),        // front
+    new Vector3(0, Math.PI, 0),  // back
 ];
 
 export enum EProjection { Perspective, Orthographic }
 export enum EViewPreset { None = -1, Left = 0, Right, Top, Bottom, Front, Back }
 
-export default class UniversalCamera extends THREE.Camera
+export default class UniversalCamera extends Camera
 {
     type: string;
     isPerspectiveCamera: boolean;
@@ -98,20 +106,20 @@ export default class UniversalCamera extends THREE.Camera
     setFocalLength(focalLength: number)
     {
         const vExtentSlope = 0.5 * this.getFilmHeight() / focalLength;
-        this.fov = THREE.Math.RAD2DEG * 2 * Math.atan(vExtentSlope);
+        this.fov = MathUtils.RAD2DEG * 2 * Math.atan(vExtentSlope);
         this.updateProjectionMatrix();
     }
 
     getFocalLength()
     {
-        const vExtentSlope = Math.tan(THREE.Math.DEG2RAD * 0.5 * this.fov);
+        const vExtentSlope = Math.tan(MathUtils.DEG2RAD * 0.5 * this.fov);
         return 0.5 * this.getFilmHeight() / vExtentSlope;
     }
 
     getEffectiveFOV()
     {
-        return THREE.Math.RAD2DEG * 2 * Math.atan(
-            Math.tan(THREE.Math.DEG2RAD * 0.5 * this.fov) / this.zoom);
+        return MathUtils.RAD2DEG * 2 * Math.atan(
+            Math.tan(MathUtils.DEG2RAD * 0.5 * this.fov) / this.zoom);
     }
 
     getFilmWidth()
@@ -128,11 +136,11 @@ export default class UniversalCamera extends THREE.Camera
                   windowX: number, windowY: number, windowWidth: number, windowHeight: number)
     {
         if (this.isPerspectiveCamera) {
-            THREE.PerspectiveCamera.prototype.setViewOffset.call(
+            PerspectiveCamera.prototype.setViewOffset.call(
                 this, viewportWidth, viewportHeight, windowX, windowY, windowWidth, windowHeight);
         }
         else {
-            THREE.OrthographicCamera.prototype.setViewOffset.call(
+            OrthographicCamera.prototype.setViewOffset.call(
                 this, viewportWidth, viewportHeight, windowX, windowY, windowWidth, windowHeight);
         }
     }
@@ -215,7 +223,7 @@ export default class UniversalCamera extends THREE.Camera
             this.projectionMatrix.makeOrthographic(left, right, top, bottom, near, far);
         }
         else {
-            let top = near * Math.tan(THREE.Math.DEG2RAD * 0.5 * this.fov) / zoom;
+            let top = near * Math.tan(MathUtils.DEG2RAD * 0.5 * this.fov) / zoom;
             let height = 2 * top;
             let width = aspect * height;
             let left = -0.5 * width;

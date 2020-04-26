@@ -5,7 +5,11 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Vector3,
+    Matrix4,
+} from "three";
+
 import math from "./math";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,8 +26,8 @@ export interface IDeltaOrbitManip
 
 export default class OrbitController
 {
-    readonly orientation = new THREE.Vector3();
-    readonly offset = new THREE.Vector3();
+    readonly orientation = new Vector3();
+    readonly offset = new Vector3();
     size: number = 50;
 
     orientationEnabled: boolean;
@@ -69,14 +73,14 @@ export default class OrbitController
         offset.y += delta.dY * factor / this.viewportHeight;
     }
 
-    toMatrix(matOut?: THREE.Matrix4): THREE.Matrix4
+    toMatrix(matOut?: Matrix4): Matrix4
     {
-        matOut = matOut || new THREE.Matrix4();
+        matOut = matOut || new Matrix4();
         math.composeOrbitMatrix(this.orientation, this.offset, matOut);
         return matOut;
     }
 
-    fromMatrix(mat: THREE.Matrix4)
+    fromMatrix(mat: Matrix4)
     {
         math.decomposeOrbitMatrix(mat, this.orientation, this.offset);
     }

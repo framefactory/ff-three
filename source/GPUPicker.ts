@@ -5,7 +5,15 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    WebGLRenderer,
+    WebGLRenderTarget,
+    Object3D,
+    Scene,
+    Camera,
+    Vector3,
+    Box3,
+} from "three";
 
 import IndexShader from "./shaders/IndexShader";
 import PositionShader from "./shaders/PositionShader";
@@ -15,18 +23,18 @@ import { IBaseEvent } from "./Viewport";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _vec3 = new THREE.Vector3();
+const _vec3 = new Vector3();
 
 const _range = 10000;
 
-const _pickPositionRange = new THREE.Box3(
-    new THREE.Vector3(-_range, -_range, -_range),
-    new THREE.Vector3(_range, _range, _range)
+const _pickPositionRange = new Box3(
+    new Vector3(-_range, -_range, -_range),
+    new Vector3(_range, _range, _range)
 );
 
 export default class GPUPicker
 {
-    static add(object: THREE.Object3D, recursive: boolean)
+    static add(object: Object3D, recursive: boolean)
     {
         const hookObject3D = object => {
             if ((object as any).material) {
@@ -47,7 +55,7 @@ export default class GPUPicker
         }
     }
 
-    static remove(object: THREE.Object3D, recursive: boolean)
+    static remove(object: Object3D, recursive: boolean)
     {
         const unhookObject3D = object => {
             if ((object as any).material) {
@@ -64,22 +72,22 @@ export default class GPUPicker
     }
 
 
-    protected renderer: THREE.WebGLRenderer;
+    protected renderer: WebGLRenderer;
 
-    protected pickTextures: THREE.WebGLRenderTarget[];
+    protected pickTextures: WebGLRenderTarget[];
     protected pickBuffer: Uint8Array;
 
     protected indexShader: IndexShader;
     protected positionShader: PositionShader;
     protected normalShader: NormalShader;
 
-    constructor(renderer: THREE.WebGLRenderer)
+    constructor(renderer: WebGLRenderer)
     {
         this.renderer = renderer;
 
         this.pickTextures = [];
         for (let i = 0; i < 3; ++i) {
-            this.pickTextures[i] = new THREE.WebGLRenderTarget(1, 1, { stencilBuffer: false });
+            this.pickTextures[i] = new WebGLRenderTarget(1, 1, { stencilBuffer: false });
         }
         this.pickBuffer = new Uint8Array(4);
 
@@ -88,7 +96,7 @@ export default class GPUPicker
         this.normalShader = new NormalShader();
     }
 
-    pickObject(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): THREE.Object3D
+    pickObject(scene: Scene, camera: Camera, event: IBaseEvent): Object3D
     {
         const index = this.pickIndex(scene, camera, event);
         if (index > 0) {
@@ -104,7 +112,7 @@ export default class GPUPicker
      * @param camera The active camera.
      * @param event A UI event providing the screen position at which to pick.
      */
-    pickIndex(scene: THREE.Scene, camera: THREE.Camera, event: IBaseEvent): number
+    pickIndex(scene: Scene, camera: Camera, event: IBaseEvent): number
     {
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
@@ -142,11 +150,11 @@ export default class GPUPicker
      * be set to the local bounding box of the object whose position is picked.
      * @param result A vector containing the picked position in object-local coordinates.
      */
-    pickPosition(scene: THREE.Scene, camera: THREE.Camera,
-        event: IBaseEvent, range?: THREE.Box3, result?: THREE.Vector3): THREE.Vector3
+    pickPosition(scene: Scene, camera: Camera,
+        event: IBaseEvent, range?: Box3, result?: Vector3): Vector3
     {
         range = range || _pickPositionRange;
-        result = result || new THREE.Vector3();
+        result = result || new Vector3();
 
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);
@@ -197,10 +205,10 @@ export default class GPUPicker
      * @param event A UI event providing the screen position at which to pick.
      * @param result A vector containing the picked normal in object-local coordinates.
      */
-    pickNormal(scene: THREE.Scene, camera: THREE.Camera,
-            event: IBaseEvent, result?: THREE.Vector3): THREE.Vector3
+    pickNormal(scene: Scene, camera: Camera,
+            event: IBaseEvent, result?: Vector3): Vector3
     {
-        result = result || new THREE.Vector3();
+        result = result || new Vector3();
 
         const viewport = event.viewport;
         camera = viewport.updateCamera(camera);

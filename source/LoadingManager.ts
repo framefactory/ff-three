@@ -5,12 +5,14 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    LoadingManager as ThreeLoadingManager,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-export default class LoadingManager extends THREE.LoadingManager
+export default class LoadingManager extends ThreeLoadingManager
 {
     constructor()
     {

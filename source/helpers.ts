@@ -5,57 +5,69 @@
  * License: MIT
  */
 
-import * as THREE from "three";
+import {
+    Object3D,
+    Mesh,
+    Texture,
+    Material,
+    BufferGeometry,
+    Vector3,
+    Matrix4,
+    Box3,
+    Euler,
+    Quaternion,
+    MathUtils,
+} from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const _vec3 = new THREE.Vector3();
-const _mat4 = new THREE.Matrix4();
-const _euler = new THREE.Euler();
-const _quat = new THREE.Quaternion();
+const _vec3 = new Vector3();
+const _mat4 = new Matrix4();
+const _euler = new Euler();
+const _quat = new Quaternion();
 
 export type RotationOrder = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
 
-export function degreesToQuaternion(rotation: number[], order: RotationOrder, quaternion?: THREE.Quaternion): THREE.Quaternion
+export function degreesToQuaternion(rotation: number[], order: RotationOrder, quaternion?: Quaternion): Quaternion
 {
-    const result = quaternion || new THREE.Quaternion();
+    const result = quaternion || new Quaternion();
 
-    _vec3.fromArray(rotation).multiplyScalar(THREE.Math.DEG2RAD);
+    _vec3.fromArray(rotation).multiplyScalar(MathUtils.DEG2RAD);
     _euler.setFromVector3(_vec3, order);
     result.setFromEuler(_euler);
 
     return result;
 }
 
-export function quaternionToDegrees(quaternion: THREE.Quaternion, order: string, rotation?: number[]): number[]
+export function quaternionToDegrees(quaternion: Quaternion, order: string, rotation?: number[]): number[]
 {
     const result = rotation || [ 0, 0, 0 ];
 
     _euler.setFromQuaternion(quaternion, order);
     _euler.toVector3(_vec3);
-    _vec3.multiplyScalar(THREE.Math.RAD2DEG).toArray(result);
+    _vec3.multiplyScalar(MathUtils.RAD2DEG).toArray(result);
 
     return result;
 }
 
-export function disposeObject(object: THREE.Object3D)
+export function disposeObject(object: Object3D)
 {
-    const geometries = new Map<string, THREE.BufferGeometry>();
-    const materials = new Map<string, THREE.Material>();
-    const textures = new Map<string, THREE.Texture>();
+    const geometries = new Map<string, BufferGeometry>();
+    const materials = new Map<string, Material>();
+    const textures = new Map<string, Texture>();
 
     object.traverse(object => {
-        const mesh = object as THREE.Mesh;
+        const mesh = object as Mesh;
         if (mesh.isMesh) {
-            const geometry = mesh.geometry as THREE.BufferGeometry;
+            const geometry = mesh.geometry as BufferGeometry;
             if (geometry) {
                 geometries.set(geometry.uuid, geometry);
             }
-            const material = mesh.material as THREE.Material;
+            const material = mesh.material as Material;
             if (material) {
                 materials.set(material.uuid, material);
                 for (let key in material) {
-                    const texture = material[key] as any; // THREE.Texture;
+                    const texture = material[key] as any; // Texture;
                     if (texture && texture.isTexture) {
                         textures.set(texture.uuid, texture);
                     }
@@ -90,7 +102,7 @@ export function disposeObject(object: THREE.Object3D)
  * @param box The box to be updated.
  * @param root
  */
-export function computeLocalBoundingBox(object: THREE.Object3D, box: THREE.Box3, root?: THREE.Object3D)
+export function computeLocalBoundingBox(object: Object3D, box: Box3, root?: Object3D)
 {
     if (!root) {
         root = object;
