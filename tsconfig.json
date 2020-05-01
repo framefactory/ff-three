@@ -1,10 +1,13 @@
 {
     "compilerOptions": {
-        "noEmit": true,
+        "composite": true,
         "target": "ES6",
-        "module": "commonjs",
+        "module": "CommonJS",
         "experimentalDecorators": true,
         "sourceMap": true,
+
+        "outDir": "built/export",
+        "rootDir": "source",
 
         "baseUrl": ".",
         "paths": {
@@ -12,5 +15,13 @@
             "@ff/browser/*": [ "../ff-browser/source/*" ],
             "@ff/ui/*": [ "../ff-ui/source/*" ]
         }
-    }
+    },
+    "include": [
+        "source/**/*"
+    ],
+    "references": [
+        { "path":  "../ff-core/tsconfig.json" },
+        { "path":  "../ff-browser/tsconfig.json" },
+        { "path":  "../ff-ui/tsconfig.json" }
+    ]
 }
