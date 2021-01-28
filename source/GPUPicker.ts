@@ -11,6 +11,7 @@ import {
     Object3D,
     Scene,
     Camera,
+    Color,
     Vector3,
     Box3,
 } from "three";
@@ -24,6 +25,7 @@ import { IBaseEvent } from "./Viewport";
 ////////////////////////////////////////////////////////////////////////////////
 
 const _vec3 = new Vector3();
+const _color = new Color();
 
 const _range = 10000;
 
@@ -122,7 +124,7 @@ export default class GPUPicker
 
         const renderer = this.renderer;
         const pickTexture = this.pickTextures[0];
-        const color = renderer.getClearColor().clone();
+        renderer.getClearColor(_color);
 
         viewport.applyPickViewport(pickTexture, event);
         renderer.setRenderTarget(pickTexture);
@@ -131,7 +133,7 @@ export default class GPUPicker
         renderer.render(scene, camera);
 
         renderer.setRenderTarget(null);
-        renderer.setClearColor(color);
+        renderer.setClearColor(_color);
 
         scene.overrideMaterial = overrideMaterial;
 
@@ -164,7 +166,7 @@ export default class GPUPicker
 
         const renderer = this.renderer;
         const pickTextures = this.pickTextures;
-        const color = renderer.getClearColor().clone();
+        renderer.getClearColor(_color);
         renderer.setClearColor(0);
 
         for (let i = 0; i < 3; ++i) {
@@ -178,7 +180,7 @@ export default class GPUPicker
         }
 
         renderer.setRenderTarget(null);
-        renderer.setClearColor(color);
+        renderer.setClearColor(_color);
 
         scene.overrideMaterial = overrideMaterial;
 
@@ -218,7 +220,7 @@ export default class GPUPicker
 
         const renderer = this.renderer;
         const pickTexture = this.pickTextures[0];
-        const color = renderer.getClearColor().clone();
+        renderer.getClearColor(_color);
 
         viewport.applyPickViewport(pickTexture, event);
         renderer.setRenderTarget(pickTexture);
@@ -227,7 +229,7 @@ export default class GPUPicker
         renderer.render(scene, camera);
 
         renderer.setRenderTarget(null);
-        renderer.setClearColor(color);
+        renderer.setClearColor(_color);
 
         scene.overrideMaterial = overrideMaterial;
 

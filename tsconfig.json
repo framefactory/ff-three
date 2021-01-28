@@ -2,7 +2,7 @@
     "compilerOptions": {
         "composite": true,
         "target": "ES6",
-        "module": "CommonJS",
+        "module": "ES6",
         "experimentalDecorators": true,
         "sourceMap": true,
 

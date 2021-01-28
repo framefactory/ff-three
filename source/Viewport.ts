@@ -16,7 +16,7 @@ import {
 import Publisher, { ITypedEvent } from "@ff/core/Publisher";
 
 import {
-    IBaseEvent as IManipBaseEvent,
+    IManipEvent as IManipBaseEvent,
     IPointerEvent as IManipPointerEvent,
     ITriggerEvent as IManipTriggerEvent
 } from "@ff/browser/ManipTarget";
@@ -286,7 +286,7 @@ export default class Viewport extends Publisher implements IViewportManip
      */
     isInside(event: IBaseEvent): boolean
     {
-        return this.isPointInside(event.localX, event.localY);
+        return this.isPointInside(event.centerX, event.centerY);
     }
 
     isPointInside(x: number, y: number): boolean
@@ -372,8 +372,8 @@ export default class Viewport extends Publisher implements IViewportManip
     applyPickViewport(target: WebGLRenderTarget, event: IBaseEvent)
     {
         const absRect = this._absRect;
-        const x = event.localX - absRect.x;
-        const y = this.canvasHeight - event.localY - absRect.y;
+        const x = event.centerX - absRect.x;
+        const y = this.canvasHeight - event.centerY - absRect.y;
         target.viewport.set(-x, -y, absRect.width, absRect.height);
 
         //console.log("Viewport.applyPickViewport - offset: ", -left, -top);
@@ -385,8 +385,8 @@ export default class Viewport extends Publisher implements IViewportManip
     {
         const vpEvent = event as IBaseEvent;
         vpEvent.viewport = this;
-        vpEvent.deviceX = this.getDeviceX(event.localX);
-        vpEvent.deviceY = this.getDeviceY(event.localY);
+        vpEvent.deviceX = this.getDeviceX(event.centerX);
+        vpEvent.deviceY = this.getDeviceY(event.centerY);
         return vpEvent;
     }
 

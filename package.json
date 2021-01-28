@@ -1,6 +1,6 @@
 {
     "name": "ff-three",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "FF Three Typescript Foundation Library",
     "scripts": {
         "build": "tsc -p source",
@@ -8,7 +8,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/framelab/ff-three.git"
+        "url": "git+https://github.com/framefactory/ff-three.git"
     },
     "keywords": [
         "typescript",
@@ -20,19 +20,19 @@
     },
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/framelab/ff-three/issues"
+        "url": "https://github.com/framefactory/ff-three/issues"
     },
-    "homepage": "https://github.com/framelab/ff-three#readme",
+    "homepage": "https://github.com/framefactory/ff-three#readme",
     "dependencies": {
         "resolve-pathname": "^3.0.0",
-        "three": "^0.116.0"
+        "three": "^0.125.1"
     },
     "devDependencies": {
-        "@types/chai": "^4.2.11",
-        "@types/mocha": "^7.0.2",
+        "@types/chai": "^4.2.14",
+        "@types/mocha": "^8.2.0",
         "chai": "^4.2.0",
-        "mocha": "^7.1.2",
+        "mocha": "^8.2.1",
         "module-alias": "^2.2.2",
-        "typescript": "^3.8.3"
+        "typescript": "^4.1.3"
     }
 }
