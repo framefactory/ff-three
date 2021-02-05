@@ -18,7 +18,7 @@ import math from "@ff/core/math";
 import threeMath from "./math";
 
 import {
-    IManip,
+    IManipListener,
     IPointerEvent,
     ITriggerEvent
 } from "@ff/browser/ManipTarget";
@@ -32,7 +32,7 @@ enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
 
 
-export default class OrbitManipulator implements IManip
+export default class OrbitManipulator implements IManipListener
 {
     orbit = new Vector3(0, 0, 0);
     offset = new Vector3(0, 0, 50);
@@ -86,9 +86,9 @@ export default class OrbitManipulator implements IManip
 
         // calculate pinch
         if (event.pointerCount === 2) {
-            const positions = event.activePositions;
-            const dx = positions[1].clientX - positions[0].clientX;
-            const dy = positions[1].clientY - positions[0].clientY;
+            const positions = event.activePointers;
+            const dx = positions[1].offsetX - positions[0].offsetX;
+            const dy = positions[1].offsetY - positions[0].offsetY;
             const pinchDist = Math.sqrt(dx * dx + dy * dy);
 
             const prevPinchDist = this.prevPinchDist || pinchDist;
