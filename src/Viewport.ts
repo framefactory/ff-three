@@ -28,15 +28,16 @@ import CameraController from "./CameraController";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBaseEvent extends IManipBaseEvent
+export interface IViewportEventExt
 {
     viewport: Viewport | null;
     deviceX: number;
     deviceY: number;
 }
 
-export interface IPointerEvent extends IManipPointerEvent, IBaseEvent { }
-export interface ITriggerEvent extends IManipTriggerEvent, IBaseEvent { }
+export interface IBaseEvent extends IManipBaseEvent, IViewportEventExt { }
+export interface IPointerEvent extends IManipPointerEvent, IViewportEventExt { }
+export interface ITriggerEvent extends IManipTriggerEvent, IViewportEventExt { }
 
 export interface IViewportManip
 {

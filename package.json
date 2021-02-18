@@ -11,7 +11,8 @@
     ],
     "type": "commonjs",
     "exports": {
-        "./": "./dist/exports/"
+        "./": "./dist/exports/",
+        "./src/": "./src/"
     },
     "scripts": {
         "build": "tsc",
