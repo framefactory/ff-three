@@ -6,22 +6,22 @@
         "experimentalDecorators": true,
         "sourceMap": true,
 
-        "outDir": "built/export",
-        "rootDir": "source",
+        "outDir": "dist/exports",
+        "rootDir": "src",
 
         "baseUrl": ".",
         "paths": {
-            "@ff/core/*": [ "../ff-core/source/*" ],
-            "@ff/browser/*": [ "../ff-browser/source/*" ],
-            "@ff/ui/*": [ "../ff-ui/source/*" ]
+            "@ff/core/*": [ "../core/src/*" ],
+            "@ff/browser/*": [ "../browser/src/*" ],
+            "@ff/ui/*": [ "../ui/src/*" ]
         }
     },
     "include": [
-        "source/**/*"
+        "src/**/*"
     ],
     "references": [
-        { "path":  "../ff-core/tsconfig.json" },
-        { "path":  "../ff-browser/tsconfig.json" },
-        { "path":  "../ff-ui/tsconfig.json" }
+        { "path":  "../core" },
+        { "path":  "../browser" },
+        { "path":  "../ui" }
     ]
 }
