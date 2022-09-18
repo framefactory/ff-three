@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2020 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -20,8 +20,8 @@ export interface IGridProps
     size: number;
     mainDivisions: number;
     subDivisions: number;
-    mainColor: THREE.Color | string | number;
-    subColor: THREE.Color | string | number;
+    mainColor: Color | string | number;
+    subColor: Color | string | number;
 }
 
 export default class Grid extends LineSegments

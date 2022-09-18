@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2020 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -9,7 +9,7 @@ import {
     Mesh,
     MeshPhongMaterial,
     MeshPhongMaterialParameters,
-    PlaneBufferGeometry,
+    PlaneGeometry,
     MathUtils,
     UniformsUtils,
     ShaderLib,
@@ -24,13 +24,13 @@ const vertexShader = require("./shaders/floorPhongShader.vert").default;
 
 export default class Floor extends Mesh
 {
-    geometry: PlaneBufferGeometry;
+    geometry: PlaneGeometry;
     material: FloorMaterial;
 
     constructor()
     {
         super(
-            new PlaneBufferGeometry(2, 2, 1, 1),
+            new PlaneGeometry(2, 2, 1, 1),
             new FloorMaterial()
         );
 

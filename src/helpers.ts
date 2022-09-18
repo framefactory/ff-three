@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2020 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -44,7 +44,7 @@ export function quaternionToDegrees(quaternion: Quaternion, order: string, rotat
     const result = rotation || [ 0, 0, 0 ];
 
     _euler.setFromQuaternion(quaternion, order);
-    _euler.toVector3(_vec3);
+    _vec3.setFromEuler(_euler);
     _vec3.multiplyScalar(MathUtils.RAD2DEG).toArray(result);
 
     return result;
