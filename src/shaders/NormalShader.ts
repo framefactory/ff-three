@@ -11,7 +11,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class NormalShader extends ShaderMaterial
+export class NormalShader extends ShaderMaterial
 {
     isNormalShader = true;
 

@@ -5,13 +5,11 @@
  * License: MIT
  */
 
-import {
-    LoadingManager,
-} from "three";
+import { LoadingManager } from "three";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Loader
+export class Loader
 {
     static readonly assetType: string = "";
     static readonly extensions: string[] = [];
@@ -25,6 +23,7 @@ export default class Loader
 
     constructor(loadingManager: LoadingManager)
     {
+        // do nothing
     }
 
     canLoad(path: string)

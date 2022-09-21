@@ -11,7 +11,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Billboard extends Object3D
+export class Billboard extends Object3D
 {
     readonly isSprite = true;
 

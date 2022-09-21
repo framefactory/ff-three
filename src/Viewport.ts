@@ -13,18 +13,18 @@ import {
     Box3,
 } from "three";
 
-import Publisher, { ITypedEvent } from "@ff/core/Publisher";
+import { Publisher, ITypedEvent } from "@ffweb/core/Publisher.js";
 
 import {
     IManipEvent as IManipBaseEvent,
     IPointerEvent as IManipPointerEvent,
     ITriggerEvent as IManipTriggerEvent
-} from "@ff/browser/ManipTarget";
+} from "@ffweb/browser/ManipTarget.js";
 
-import UniversalCamera, { EProjection, EViewPreset } from "./UniversalCamera";
+import { UniversalCamera, EProjection, EViewPreset } from "./UniversalCamera.js";
 
-import ViewportOverlay, { ELocation } from "./ui/ViewportOverlay";
-import CameraController from "./CameraController";
+import { ViewportOverlay, ELocation } from "./ui/ViewportOverlay.js";
+import { CameraController } from "./CameraController.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,7 @@ export interface IViewportProps
     overlay?: ViewportOverlay;
 }
 
-export default class Viewport extends Publisher implements IViewportManip
+export class Viewport extends Publisher implements IViewportManip
 {
     next: IViewportManip = null;
 

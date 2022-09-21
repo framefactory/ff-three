@@ -14,7 +14,7 @@ import {
 /**
  * Renders the local position, requires one pass per component (x, y, z).
  */
-export default class PositionShader extends ShaderMaterial
+export class PositionShader extends ShaderMaterial
 {
     isPositionShader = true;
 

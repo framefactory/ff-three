@@ -10,7 +10,7 @@ import {
     Matrix4,
 } from "three";
 
-import math from "./math";
+import { math } from "./math.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,11 +24,11 @@ export interface IDeltaOrbitManip
     dRoll: number;
 }
 
-export default class OrbitController
+export class OrbitController
 {
     readonly orientation = new Vector3();
     readonly offset = new Vector3();
-    size: number = 50;
+    size = 50;
 
     orientationEnabled: boolean;
     orthographicMode: boolean;
@@ -37,7 +37,7 @@ export default class OrbitController
     protected viewportHeight: number;
 
 
-    constructor(orthographicMode: boolean = false)
+    constructor(orthographicMode = false)
     {
         this.orientationEnabled = true;
         this.orthographicMode = orthographicMode;

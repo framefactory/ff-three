@@ -24,7 +24,7 @@ export interface IGridProps
     subColor: Color | string | number;
 }
 
-export default class Grid extends LineSegments
+export class Grid extends LineSegments
 {
     constructor(props: IGridProps)
     {

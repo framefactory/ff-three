@@ -16,11 +16,11 @@ import {
     Box3,
 } from "three";
 
-import IndexShader from "./shaders/IndexShader";
-import PositionShader from "./shaders/PositionShader";
-import NormalShader from "./shaders/NormalShader";
+import { IndexShader } from "./shaders/IndexShader.js";
+import { PositionShader } from "./shaders/PositionShader.js";
+import { NormalShader } from "./shaders/NormalShader.js";
 
-import { IBaseEvent } from "./Viewport";
+import { IBaseEvent } from "./Viewport.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ const _pickPositionRange = new Box3(
     new Vector3(_range, _range, _range)
 );
 
-export default class GPUPicker
+export class GPUPicker
 {
     static add(object: Object3D, recursive: boolean)
     {

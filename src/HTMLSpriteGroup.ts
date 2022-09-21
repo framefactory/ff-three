@@ -10,7 +10,7 @@ import {
     Camera,
 } from "three";
 
-import HTMLSprite from "./HTMLSprite";
+import { HTMLSprite } from "./HTMLSprite.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,12 +19,13 @@ export { HTMLSprite };
 /**
  * THREE 3D object, grouping a number of HTML sprites.
  */
-export default class HTMLSpriteGroup extends Object3D
+export class HTMLSpriteGroup extends Object3D
 {
     readonly isHTMLSpriteGroup = true;
 
     private _visible = true;
 
+    // @ts-ignore
     get visible() {
         return this._visible;
     }

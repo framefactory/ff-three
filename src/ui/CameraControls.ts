@@ -5,14 +5,20 @@
  * License: MIT
  */
 
-import CustomElement, { customElement, html, property } from "@ff/ui/CustomElement";
+import {
+    CustomElement, 
+    customElement, 
+    html, 
+    property, 
+    type TemplateResult
+} from "@ffweb/ui/CustomElement.js";
 
-import "@ff/ui/IndexButton";
-import { IButtonClickEvent } from "@ff/ui/Button";
+import "@ffweb/ui/IndexButton.js";
+import { IButtonClickEvent } from "@ffweb/ui/Button.js";
 
-import "./ViewCube";
+import "./ViewCube.js";
 
-import { EProjection } from "../UniversalCamera";
+import { EProjection } from "../UniversalCamera.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +48,7 @@ export interface IProjectionSelectEvent extends CustomEvent
  * - *"select"* emits [[IProjectionSelectEvent]] after the user selects a projection option.
  */
 @customElement("ff-camera-controls")
-export default class CameraControls extends CustomElement
+export class CameraControls extends CustomElement
 {
     @property({ attribute: false })
     preset: EViewPreset = EViewPreset.None;
@@ -56,7 +62,7 @@ export default class CameraControls extends CustomElement
         this.classList.add("ff-camera-controls");
     }
 
-    protected render()
+    protected render(): TemplateResult
     {
         return html`
             <ff-view-cube .preset=${this.preset}></ff-view-cube>

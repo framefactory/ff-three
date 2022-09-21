@@ -5,14 +5,15 @@
  * License: MIT
  */
 
-import OBJLoader from "three/examples/js/loaders/OBJLoader";
-import PLYLoader from "three/examples/js/loaders/PLYLoader";
+import { LoadingManager, BufferGeometry } from "three";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 
-import Loader from "./Loader";
+import { Loader } from "./Loader.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class GeometryLoader extends Loader
+export class GeometryLoader extends Loader
 {
     static readonly assetType = "geometry";
     static readonly extensions = [ "obj", "ply" ];
@@ -20,7 +21,7 @@ export default class GeometryLoader extends Loader
     protected objLoader;
     protected plyLoader;
 
-    constructor(loadingManager: THREE.LoadingManager)
+    constructor(loadingManager: LoadingManager)
     {
         super(loadingManager);
 
@@ -28,7 +29,7 @@ export default class GeometryLoader extends Loader
         this.plyLoader = new PLYLoader(loadingManager);
     }
 
-    async load(url: string): Promise<THREE.Geometry>
+    async load(url: string): Promise<BufferGeometry>
     {
         const extension = url.split(".").pop().toLowerCase();
 

@@ -15,7 +15,7 @@ import {
     MathUtils,
 } from "three";
 
-import math from "@ff/core/math";
+import { math } from "@ffweb/core/math.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,9 +39,9 @@ const _cameraOrientation = [
 export enum EProjection { Perspective, Orthographic }
 export enum EViewPreset { None = -1, Left = 0, Right, Top, Bottom, Front, Back }
 
-export default class UniversalCamera extends Camera
+export class UniversalCamera extends Camera
 {
-    type: string;
+    declare type: string;
     isPerspectiveCamera: boolean;
     isOrthographicCamera: boolean;
     isUniversalCamera = true;

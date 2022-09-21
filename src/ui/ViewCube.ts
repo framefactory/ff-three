@@ -5,11 +5,18 @@
  * License: MIT
  */
 
-import CustomElement, { customElement, html, property } from "@ff/ui/CustomElement";
-import "@ff/ui/IndexButton";
-import { IButtonClickEvent } from "@ff/ui/Button";
+import {
+  CustomElement, 
+  customElement, 
+  html, 
+  property,
+  type TemplateResult
+} from "@ffweb/ui/CustomElement.js";
 
-import { EViewPreset } from "./CameraControls";
+import "@ffweb/ui/IndexButton.js";
+import { IButtonClickEvent } from "@ffweb/ui/Button.js";
+
+import { EViewPreset } from "./CameraControls.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +43,7 @@ export interface IViewCubeSelectEvent extends CustomEvent
  * - *"select"* emits [[IViewCubeSelectEvent]] after the user selects a view preset.
  */
 @customElement("ff-view-cube")
-export default class ViewCube extends CustomElement
+export class ViewCube extends CustomElement
 {
     @property({ attribute: false })
     preset: EViewPreset = EViewPreset.None;
@@ -54,7 +61,7 @@ export default class ViewCube extends CustomElement
         this.addEventListener("click", this.onClick);
     }
 
-    protected render()
+    protected render(): TemplateResult
     {
         const preset = this.preset;
 

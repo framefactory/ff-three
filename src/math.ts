@@ -13,12 +13,11 @@ import {
     Quaternion,
 } from "three";
 
-import baseMath from "@ff/core/math";
+import { math as baseMath } from "@ffweb/core/math.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const _vec4a = new Vector4();
-const _vec4b = new Vector4();
 const _vec3a = new Vector3();
 const _vec3b = new Vector3();
 const _mat4 = new Matrix4();
@@ -29,13 +28,13 @@ const _quat = new Quaternion();
 
 //export type Matrix4 = Float32Array | number[];
 
-const math = {
-    PI: 3.1415926535897932384626433832795,
-    DOUBLE_PI: 6.283185307179586476925286766559,
-    HALF_PI: 1.5707963267948966192313216916398,
-    QUARTER_PI: 0.78539816339744830961566084581988,
-    DEG2RAD: 0.01745329251994329576923690768489,
-    RAD2DEG: 57.295779513082320876798154814105,
+export const math = {
+    PI: 3.141592653589793,
+    DOUBLE_PI: 6.283185307179586,
+    HALF_PI: 1.5707963267948966,
+    QUARTER_PI: 0.7853981633974483,
+    DEG2RAD: 0.017453292519943295,
+    RAD2DEG: 57.29577951308232,
 
     composeOrbitMatrix: function(orientation: Vector3, offset: Vector3, result?: Matrix4): Matrix4
     {
@@ -123,5 +122,3 @@ const math = {
         _vec3a.toArray(rotOut);
     }
 };
-
-export default math;

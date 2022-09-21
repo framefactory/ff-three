@@ -15,17 +15,17 @@ import {
     ShaderLib,
 } from "three";
 
-import { Dictionary } from "@ff/core/types";
+import { Dictionary } from "@ffweb/core/types.js";
 
-const fragmentShader = require("./shaders/floorPhongShader.frag").default;
-const vertexShader = require("./shaders/floorPhongShader.vert").default;
+import fragmentShader from "./shaders/floorPhongShader.frag";
+import vertexShader from "./shaders/floorPhongShader.vert";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class Floor extends Mesh
+export class Floor extends Mesh
 {
-    geometry: PlaneGeometry;
-    material: FloorMaterial;
+    declare geometry: PlaneGeometry;
+    declare material: FloorMaterial;
 
     constructor()
     {
@@ -46,9 +46,11 @@ export default class Floor extends Mesh
     }
 }
 
-export interface IFloorMaterialParameters extends MeshPhongMaterialParameters
-{
-}
+export type IFloorMaterialParameters = MeshPhongMaterialParameters;
+
+// export interface IFloorMaterialParameters extends MeshPhongMaterialParameters
+// {
+// }
 
 export class FloorMaterial extends MeshPhongMaterial
 {

@@ -12,7 +12,7 @@ import {
     Vector3,
 } from "three";
 
-import CustomElement, { customElement, html } from "@ff/ui/CustomElement";
+import { CustomElement, customElement, html } from "@ffweb/ui/CustomElement.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ export enum EQuadrant { TopRight, TopLeft, BottomLeft, BottomRight }
  * A Three.js Object representing a 3D renderable part and a 2D (HTML) part.
  * HTML sprites should have a [[HTMLSpriteGroup]] as their parent.
  */
-export default class HTMLSprite extends Object3D
+export class HTMLSprite extends Object3D
 {
     readonly isHTMLSprite = true;
 
@@ -48,6 +48,7 @@ export default class HTMLSprite extends Object3D
         this.frustumCulled = false;
     }
 
+    // @ts-ignore
     get visible() {
         return this._visible;
     }

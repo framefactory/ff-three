@@ -5,8 +5,14 @@
  * License: MIT
  */
 
-import { Dictionary } from "@ff/core/types";
-import CustomElement, { customElement, html } from "@ff/ui/CustomElement";
+import { Dictionary } from "@ffweb/core/types.js";
+
+import { 
+    CustomElement, 
+    customElement, 
+    html,
+    type TemplateResult
+} from "@ffweb/ui/CustomElement.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +32,7 @@ interface ILabel
  * using custom CSS classes.
  */
 @customElement("ff-viewport-overlay")
-export default class ViewportOverlay extends CustomElement
+export class ViewportOverlay extends CustomElement
 {
     protected labels: Dictionary<ILabel>[] = [];
 
@@ -53,7 +59,7 @@ export default class ViewportOverlay extends CustomElement
         this.classList.add("ff-container", "ff-viewport-overlay");
     }
 
-    protected render()
+    protected render(): TemplateResult
     {
         const labels = this.labels;
 

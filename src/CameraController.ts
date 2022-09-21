@@ -12,16 +12,16 @@ import {
     Box3,
 } from "three";
 
-import math from "@ff/core/math";
+import { math } from "@ffweb/core/math.js";
 
 import {
     IManipListener,
     IPointerEvent,
     ITriggerEvent
-} from "@ff/browser/ManipTarget";
+} from "@ffweb/browser/ManipTarget.js";
 
-import threeMath from "./math";
-import UniversalCamera from "./UniversalCamera";
+import { math as threeMath } from "./math.js";
+import { UniversalCamera } from "./UniversalCamera.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,12 +30,11 @@ const _box3 = new Box3();
 const _vec3a = new Vector3();
 const _vec3b = new Vector3();
 
-enum EControllerMode { Orbit, FirstPerson }
+// enum EControllerMode { Orbit, FirstPerson }
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
 
-
-export default class CameraController implements IManipListener
+export class CameraController implements IManipListener
 {
     camera: UniversalCamera;
 
@@ -273,9 +272,10 @@ export default class CameraController implements IManipListener
                 this.updatePose(0, 0, this.deltaY * 0.0075 + 1, 0, 0, 0);
                 break;
 
-            case EManipMode.PanDolly:
-                const pinchScale = (this.deltaPinch - 1) * 0.42 + 1;
-                this.updatePose(this.deltaX * 0.75, this.deltaY * 0.75, 1 / pinchScale, 0, 0, 0);
+            case EManipMode.PanDolly: {
+                    const pinchScale = (this.deltaPinch - 1) * 0.42 + 1;
+                    this.updatePose(this.deltaX * 0.75, this.deltaY * 0.75, 1 / pinchScale, 0, 0, 0);
+                }
                 break;
         }
     }
@@ -287,7 +287,7 @@ export default class CameraController implements IManipListener
             offset, minOffset, maxOffset
         } = this;
 
-        let inverse = -1;
+        const inverse = -1;
 
         if (this.orientationEnabled) {
             orbit.x += inverse * dPitch * 220 / this.viewportHeight;

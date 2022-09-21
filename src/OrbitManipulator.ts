@@ -13,15 +13,15 @@ import{
     Box3,
 } from "three";
 
-import math from "@ff/core/math";
+import { math } from "@ffweb/core/math.js";
 
-import threeMath from "./math";
+import { math as threeMath } from "./math.js";
 
 import {
     IManipListener,
     IPointerEvent,
     ITriggerEvent
-} from "@ff/browser/ManipTarget";
+} from "@ffweb/browser/ManipTarget.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,8 +31,7 @@ const _vec3b = new Vector3();
 enum EManipMode { Off, Pan, Orbit, Dolly, Zoom, PanDolly, Roll }
 enum EManipPhase { Off, Active, Release }
 
-
-export default class OrbitManipulator implements IManipListener
+export class OrbitManipulator implements IManipListener
 {
     orbit = new Vector3(0, 0, 0);
     offset = new Vector3(0, 0, 50);
@@ -61,9 +60,6 @@ export default class OrbitManipulator implements IManipListener
     protected viewportWidth = 100;
     protected viewportHeight = 100;
 
-    constructor()
-    {
-    }
 
     onPointer(event: IPointerEvent)
     {
@@ -119,7 +115,7 @@ export default class OrbitManipulator implements IManipListener
         this.viewportHeight = height;
     }
 
-    setFromCamera(camera: Camera, adaptLimits: boolean = false)
+    setFromCamera(camera: Camera, adaptLimits = false)
     {
         const orbit = this.orbit;
         const offset = this.offset;
@@ -145,7 +141,7 @@ export default class OrbitManipulator implements IManipListener
         this.orthographicMode = false;
     }
 
-    setFromMatrix(matrix: Matrix4, invert: boolean = false)
+    setFromMatrix(matrix: Matrix4, invert = false)
     {
         threeMath.decomposeOrbitMatrix(matrix, this.orbit, this.offset);
         this.orbit.multiplyScalar(threeMath.RAD2DEG);
@@ -153,7 +149,7 @@ export default class OrbitManipulator implements IManipListener
         this.orthographicMode = false;
     }
 
-    zoomExtent(box: Box3, fovY: number = 52)
+    zoomExtent(box: Box3, fovY = 52)
     {
         box.getSize(_vec3a);
         box.getCenter(_vec3b);
@@ -301,9 +297,10 @@ export default class OrbitManipulator implements IManipListener
                 this.updatePose(0, 0, this.deltaY * 0.0075 + 1, 0, 0, 0);
                 break;
 
-            case EManipMode.PanDolly:
-                const pinchScale = (this.deltaPinch - 1) * 0.5 + 1;
-                this.updatePose(this.deltaX, this.deltaY, 1 / pinchScale, 0, 0, 0);
+            case EManipMode.PanDolly: {
+                   const pinchScale = (this.deltaPinch - 1) * 0.5 + 1;
+                   this.updatePose(this.deltaX, this.deltaY, 1 / pinchScale, 0, 0, 0);
+                }
                 break;
         }
     }
@@ -315,7 +312,7 @@ export default class OrbitManipulator implements IManipListener
             offset, minOffset, maxOffset
         } = this;
 
-        let inverse = this.cameraMode ? -1 : 1;
+        const inverse = this.cameraMode ? -1 : 1;
 
         if (this.orientationEnabled) {
             orbit.x += inverse * dPitch * 300 / this.viewportHeight;

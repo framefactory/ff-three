@@ -11,7 +11,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class IndexShader extends ShaderMaterial
+export class IndexShader extends ShaderMaterial
 {
     static indexFromPixel(pixel: Uint8Array)
     {

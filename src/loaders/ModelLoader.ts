@@ -7,21 +7,18 @@
 
 import resolvePathname from "resolve-pathname";
 
-import {
-    Group,
-} from "three";
+import { Group } from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-import GLTFLoader from "three/examples/js/loaders/GLTFLoader";
-import DRACOLoader from "three/examples/js/loaders/DRACOLoader";
-
-import Loader from "./Loader";
+import { Loader } from "./Loader.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Extended Three.js glTF loader with built-in DRACO mesh compression support.
  */
-export default class ModelLoader extends Loader
+export class ModelLoader extends Loader
 {
     static readonly assetType = "model";
     static readonly extensions = [ "gltf", "glb" ];
@@ -35,15 +32,16 @@ export default class ModelLoader extends Loader
     {
         super(loadingManager);
 
+        const dracoLoader = new DRACOLoader();
         const dracoUrl = resolvePathname(ModelLoader.dracoPath, window.location.origin + window.location.pathname);
-        DRACOLoader.setDecoderPath(dracoUrl);
+        dracoLoader.setDecoderPath(dracoUrl);
 
         if (ENV_DEVELOPMENT) {
             console.log("ModelLoader.constructor - DRACO library path: %s", dracoUrl);
         }
 
         this.gltfLoader = new GLTFLoader(loadingManager);
-        this.gltfLoader.setDRACOLoader(new DRACOLoader());
+        this.gltfLoader.setDRACOLoader(dracoLoader);
     }
 
     async load(url: string): Promise<THREE.Object3D>

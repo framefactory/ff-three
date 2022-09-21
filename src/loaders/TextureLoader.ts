@@ -11,11 +11,11 @@ import {
     Texture,
 } from "three";
 
-import Loader from "./Loader";
+import { Loader } from "./Loader.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default class TextureLoader extends Loader
+export class TextureLoader extends Loader
 {
     static readonly assetType = "texture";
     static readonly extensions = [ "jpg", "jpeg", "png" ];

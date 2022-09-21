@@ -82,13 +82,13 @@ export function disposeObject(object: Object3D)
             geometries.size, materials.size, textures.size);
     }
 
-    for (let entry of textures) {
+    for (const entry of textures) {
         entry[1].dispose();
     }
-    for (let entry of materials) {
+    for (const entry of materials) {
         entry[1].dispose();
     }
-    for (let entry of geometries) {
+    for (const entry of geometries) {
         entry[1].dispose();
     }
 }

@@ -14,30 +14,31 @@ import {
     PerspectiveCamera,
 } from "three";
 
-import uniqueId from "@ff/core/uniqueId";
+import { uniqueId } from "@ffweb/core/uniqueId.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export enum ELightType { Directional, Point, Spot }
 
-export default class UniversalLight extends Light
+export class UniversalLight extends Light
 {
-    type: string;
+    declare type: string;
+    declare isLight: true;
+
     isDirectionalLight: boolean;
     isPointLight: boolean;
     isSpotLight: boolean;
-    isLight: true;
 
     // directional light parameters
     target: THREE.Object3D = null;
 
     // point light parameters
-    distance: number = 0;
-    decay: number = 1;
+    distance = 0;
+    decay = 1;
 
     // spot light parameters
-    angle: number = Math.PI / 3;
-    penumbra: number = 0;
+    angle = Math.PI / 3;
+    penumbra = 0;
 
     shadow: THREE.LightShadow = null;
 

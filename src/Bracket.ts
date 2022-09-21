@@ -17,7 +17,7 @@ import {
     Color,
 } from "three";
 
-import { computeLocalBoundingBox } from "./helpers";
+import { computeLocalBoundingBox } from "./helpers.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +35,7 @@ export interface IBracketProps
 /**
  * Wireframe selection bracket.
  */
-export default class Bracket extends LineSegments
+export class Bracket extends LineSegments
 {
     static readonly defaultProps = {
         color: new Color("#ffd633"),

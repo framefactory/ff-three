@@ -19,10 +19,10 @@ import {
 
 export enum EBackgroundStyle { Solid, LinearGradient, RadialGradient }
 
-export default class Background extends Mesh
+export class Background extends Mesh
 {
-    geometry: BackgroundGeometry;
-    material: BackgroundMaterial;
+    declare geometry: BackgroundGeometry;
+    declare material: BackgroundMaterial;
 
     constructor()
     {
@@ -41,6 +41,7 @@ export default class Background extends Mesh
 
     updateMatrixWorld(force: boolean)
     {
+        // do nothing
     }
 }
 

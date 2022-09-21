@@ -12,7 +12,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-export default class LoadingManager extends ThreeLoadingManager
+export class LoadingManager extends ThreeLoadingManager
 {
     constructor()
     {
