@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -35,7 +35,7 @@ export class TextureLoader extends Loader
             this.textureLoader.load(url, texture => {
                 resolve(texture);
 
-            }, null, errorEvent => {
+            }, null, (errorEvent: any) => {
                 console.error(errorEvent);
                 reject(new Error(errorEvent.message));
             });

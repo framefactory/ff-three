@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -13,6 +13,8 @@ import {
     Box3,
     Matrix4,
     MathUtils,
+    PerspectiveCameraJSON,
+    OrthographicCameraJSON,
 } from "three";
 
 import { math } from "@ffweb/core/math.js";
@@ -159,7 +161,7 @@ export class UniversalCamera extends Camera
         // TODO: Implement
     }
 
-    moveToView(boundingBox: THREE.Box3)
+    moveToView(boundingBox: Box3)
     {
         this.updateMatrixWorld(false);
         _box.copy(boundingBox);
@@ -277,7 +279,7 @@ export class UniversalCamera extends Camera
 
     toJSON(meta)
     {
-        const data = super.toJSON(meta);
+        const data: any /* PerspectiveCameraJSON */ = super.toJSON(meta);
 
         data.object.fov = this.fov;
         data.object.size = this.size;

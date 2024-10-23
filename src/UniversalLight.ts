@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -13,8 +13,6 @@ import {
     SpotLightShadow,
     PerspectiveCamera,
 } from "three";
-
-import { uniqueId } from "@ffweb/core/uniqueId.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +28,7 @@ export class UniversalLight extends Light
     isSpotLight: boolean;
 
     // directional light parameters
-    target: THREE.Object3D = null;
+    target: Object3D = null;
 
     // point light parameters
     distance = 0;
@@ -40,7 +38,7 @@ export class UniversalLight extends Light
     angle = Math.PI / 3;
     penumbra = 0;
 
-    shadow: THREE.LightShadow = null;
+    shadow: LightShadow = null;
 
 
     constructor(type?: ELightType, color?: number | string, intensity?: number)

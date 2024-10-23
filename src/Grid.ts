@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -51,7 +51,7 @@ export class Grid extends LineSegments
         this.geometry = Grid.generate(props);
     }
 
-    protected static generate(props: IGridProps): THREE.BufferGeometry
+    protected static generate(props: IGridProps): BufferGeometry
     {
         const mainColor = new Color(props.mainColor as any);
         const subColor = new Color(props.subColor as any);

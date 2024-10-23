@@ -1,13 +1,19 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
 
 import resolvePathname from "resolve-pathname";
 
-import { Group } from "three";
+import {
+    Group, 
+    LoadingManager, 
+    Object3D, 
+    Scene 
+} from "three";
+
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
@@ -28,7 +34,7 @@ export class ModelLoader extends Loader
     protected gltfLoader;
 
 
-    constructor(loadingManager: THREE.LoadingManager)
+    constructor(loadingManager: LoadingManager)
     {
         super(loadingManager);
 
@@ -44,11 +50,11 @@ export class ModelLoader extends Loader
         this.gltfLoader.setDRACOLoader(dracoLoader);
     }
 
-    async load(url: string): Promise<THREE.Object3D>
+    async load(url: string): Promise<Object3D>
     {
         return new Promise((resolve, reject) => {
             this.gltfLoader.load(url, gltf => {
-                const scene: THREE.Scene = gltf.scene;
+                const scene: Scene = gltf.scene;
                 if (scene.type !== "Scene") {
                     throw new Error("not a valid gltf scene");
                 }

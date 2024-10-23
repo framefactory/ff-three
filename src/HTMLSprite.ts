@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -12,7 +12,11 @@ import {
     Vector3,
 } from "three";
 
-import { CustomElement, customElement, html } from "@ffweb/ui/CustomElement.js";
+import {
+    CustomElement, 
+    customElement, 
+    html
+} from "@ffweb/lit/CustomElement.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 

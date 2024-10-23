@@ -1,6 +1,6 @@
 /**
  * FF Typescript Foundation Library
- * Copyright 2022 Ralph Wiedemeier, Frame Factory GmbH
+ * Copyright 2024 Ralph Wiedemeier, Frame Factory GmbH
  *
  * License: MIT
  */
@@ -11,10 +11,10 @@ import {
     html, 
     property, 
     type TemplateResult
-} from "@ffweb/ui/CustomElement.js";
+} from "@ffweb/lit/CustomElement.js";
 
-import "@ffweb/ui/IndexButton.js";
-import { IButtonClickEvent } from "@ffweb/ui/Button.js";
+import "@ffweb/lit/Button.js";
+import { IButtonClickEvent } from "@ffweb/lit/Button.js";
 
 import "./ViewCube.js";
 

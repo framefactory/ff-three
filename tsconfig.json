@@ -2,8 +2,8 @@
     "extends": "./tsconfig.base.json",
 
     "compilerOptions": {
-        "target": "ES2022",
-        "module": "ESNext",
+        "target": "ES2021",
+        "module": "NodeNext",
         "moduleResolution": "NodeNext",
 
         "composite": true,
@@ -17,7 +17,7 @@
         "paths": {
             "@ffweb/core/*": [ "core/src/*" ],
             "@ffweb/browser/*": [ "browser/src/*" ],
-            "@ffweb/ui/*": [ "ui/src/*" ],
+            "@ffweb/lit/*": [ "lit/src/*" ],
         }
     },
     "include": [
@@ -26,6 +26,6 @@
     "references": [
         { "path": "../core/tsconfig.json" },
         { "path": "../browser/tsconfig.json" },
-        { "path": "../ui/tsconfig.json" }
+        { "path": "../lit/tsconfig.json" }
     ]
 }
