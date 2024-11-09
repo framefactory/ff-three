@@ -164,7 +164,6 @@ export class OrbitManipulator implements IManipListener
             this.offset.z = 0.75 * extent + 0.75 * extent / (2 * Math.tan(fovY * math.DEG2RAD * 0.5));
             this.maxOffset.z = this.offset.z * 3;
         }
-
     }
 
     /**

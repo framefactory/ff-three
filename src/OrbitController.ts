@@ -60,7 +60,7 @@ export class OrbitController
             orientation.z += delta.dRoll * 300 / this.viewportHeight;
         }
 
-        let factor;
+        let factor = 0;
 
         if (this.orthographicMode) {
             factor = this.size = Math.max(this.size, 0.1) * delta.dScale;

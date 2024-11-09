@@ -29,12 +29,12 @@ export class ModelLoader extends Loader
     static readonly assetType = "model";
     static readonly extensions = [ "gltf", "glb" ];
 
-    static readonly dracoPath: string = "js/draco/";
+    static dracoPath: string = "js/draco/";
 
-    protected gltfLoader;
+    protected gltfLoader: GLTFLoader;
 
 
-    constructor(loadingManager: LoadingManager)
+    constructor(loadingManager?: LoadingManager)
     {
         super(loadingManager);
 
@@ -54,16 +54,18 @@ export class ModelLoader extends Loader
     {
         return new Promise((resolve, reject) => {
             this.gltfLoader.load(url, gltf => {
-                const scene: Scene = gltf.scene;
-                if (scene.type !== "Scene") {
-                    throw new Error("not a valid gltf scene");
+                const root = gltf.scene;
+
+                if (root.type === "Scene") {
+                    const model = new Group();
+                    root.children.forEach(child => model.add(child));
+                    resolve(model);
                 }
 
-                const model = new Group();
-                scene.children.forEach(child => model.add(child));
-                resolve(model);
-
-            }, null, error => {
+                resolve(root);
+            },
+            null,
+            (error: string) => {
                 console.error(`failed to load '${url}': ${error}`);
                 reject(new Error(error));
             })

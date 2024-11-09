@@ -50,7 +50,7 @@
     "@ffweb/browser": "workspace:*",
     "@ffweb/lit": "workspace:*",
     "resolve-pathname": "^3.0.0",
-    "three": "^0.169.0"
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/chai": "^5.0.0",
