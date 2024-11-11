@@ -43,6 +43,10 @@ export class OrbitManipulator implements IManipListener
     minOffset = new Vector3(-Infinity, -Infinity, 0.1);
     maxOffset = new Vector3(Infinity, Infinity, 1000);
 
+    wheelSpeed = 1.0;
+    orbitSpeed = 1.0;
+    offsetSpeed = 1.0;
+
     orientationEnabled = true;
     offsetEnabled = true;
     cameraMode = true;
@@ -244,7 +248,7 @@ export class OrbitManipulator implements IManipListener
         }
 
         if (this.deltaWheel !== 0) {
-            this.updatePose(0, 0, this.deltaWheel * 0.07 + 1, 0, 0, 0);
+            this.updatePose(0, 0, this.deltaWheel * this.wheelSpeed * 0.05 + 1, 0, 0, 0);
             this.deltaWheel = 0;
             return true;
         }
@@ -314,9 +318,10 @@ export class OrbitManipulator implements IManipListener
         const inverse = this.cameraMode ? -1 : 1;
 
         if (this.orientationEnabled) {
-            orbit.x += inverse * dPitch * 300 / this.viewportHeight;
-            orbit.y += inverse * dHead * 300 / this.viewportHeight;
-            orbit.z += inverse * dRoll * 300 / this.viewportHeight;
+            const speed = this.orbitSpeed * inverse;
+            orbit.x += speed * dPitch * 300 / this.viewportHeight;
+            orbit.y += speed * dHead * 300 / this.viewportHeight;
+            orbit.z += speed * dRoll * 300 / this.viewportHeight;
 
             // check limits
             orbit.x = math.limit(orbit.x, minOrbit.x, maxOrbit.x);
@@ -326,9 +331,10 @@ export class OrbitManipulator implements IManipListener
 
         if (this.offsetEnabled) {
             const factor = offset.z = dScale * offset.z;
+            const speed = this.offsetSpeed * inverse;
 
-            offset.x += dX * factor * inverse * 2 / this.viewportHeight;
-            offset.y -= dY * factor * inverse * 2 / this.viewportHeight;
+            offset.x += dX * factor * speed * 2 / this.viewportHeight;
+            offset.y -= dY * factor * speed * 2 / this.viewportHeight;
 
             // check limits
             offset.x = math.limit(offset.x, minOffset.x, maxOffset.x);
